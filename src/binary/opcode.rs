@@ -20,6 +20,14 @@ pub enum OpCode{
     IMMSTR,
     // EXTRA [48bit data]
     EXTRA,
+    
+    // ===== FUNCTION? =====
+    // load a function into register
+    CLOSURE,
+    // make dst an args object, if already is , then add another arg
+    // ARGS src dst
+    ARGS,
+    
 
     // ===== CONTROL FLOW =====
     // normally won't generate

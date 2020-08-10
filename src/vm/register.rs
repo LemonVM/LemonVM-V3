@@ -1,18 +1,19 @@
 use crate::config::*;
 
-enum VMFunctionCallStatus{
+pub enum VMFunctionCallStatus{
     Error,
     Yield,
 }
 
-struct VMFunctionCallState{
-    registers: Vec<u64>,
-    pc: usize,
-    status:VMFunctionCallStatus,
+pub struct VMFunctionCallState{
+    pub uuid: u64,
+    pub registers: Vec<u64>,
+    pub pc: u16,
+    pub status:VMFunctionCallStatus,
 }
 
 // multiple instance sharing a same VMState? go on, tell me the bugs
-struct VMState{
+pub struct VMState{
     // register protection mode: once calling new function, 
     // all old registers is saved in heap
     
@@ -23,7 +24,7 @@ struct VMState{
     //     pops the last element(registers) and copy them into the RegisterPool(normally on stack)
     //     the return value of the function also(
     
-    function_call_chain_states:Vec<VMFunctionCallState>,
+    pub function_call_chain_states:Vec<VMFunctionCallState>,
     // when resume a function the heap registers will be copied into stack(depends on size)
-    current_function_call_state: VMFunctionCallState,
+    pub current_function_call_state: VMFunctionCallState,
 }
