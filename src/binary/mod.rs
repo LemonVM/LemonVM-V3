@@ -7,7 +7,7 @@ pub mod bytecode;
 pub mod function;
 pub mod variable;
 pub mod debug;
-pub mod reader;
+pub mod io;
 // TODO: More premetive types
 #[repr(u8)]
 pub enum TypeTags{

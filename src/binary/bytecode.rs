@@ -13,47 +13,46 @@
     until the next instruction is not start with 0xAA
     the data is fully loaded
 */
-use super::{constant::Constant, TypeTags};
+use super::{constant::Constant, TypeTags,variable::Variable, io::{Reader, BinaryRW}};
 use std::collections::BTreeMap;
-pub struct LemonVMByteCodeConstantVariable{
-    type_tag: TypeTags,
-    name_index: u16,
-}
 
 pub struct LemonVMByteCode{
     signature: [u8;5],
     version: u32,
+    enabled_extensions: Vec<u8>,
     // format
     // u32 len
     // u16 value(tag data)
     // ...
-    constant_pool:Box<BTreeMap<u16,Constant>>,
+    constant_pool:BTreeMap<u16,Constant>,
 
-    // to start main function by uuid
-    entry: u64,
+    // to index the main function from constant_pool by uuid
+    entry: u16,
+    variables: Vec<Variable>
 }
 
-
-pub struct LabeledBytecode{
-    pub label: u16,
-    pub label_len:u16,
-    pub label_start_pc:u16,
-    pub instructions: Vec<u64>,
+impl BinaryRW for LemonVMByteCode {
+    fn read(reader:&mut Reader) -> Self {
+        let s1 = reader.read_u8();
+        let s2 = reader.read_u8();
+        let s3 = reader.read_u8();
+        let s4 = reader.read_u8();
+        let s5 = reader.read_u8();
+        let signature = [s1,s2,s3,s4,s5];
+        let version = reader.read_u32();
+        let enabled_extensions = reader.read_vec(|reader|reader.read_u8());
+        let constant_pool = reader.read_map(|reader|{
+            (reader.read_u16(), Constant::read(reader))
+        });
+        let entry = reader.read_u16();
+        let variables = reader.read_vec(|reader| Variable::read(reader));
+        LemonVMByteCode{
+            signature,
+            version,
+            enabled_extensions,
+            constant_pool,
+            entry,
+            variables
+        }
+    }
 }
-
-// impl FunctionBytecode{
-//     fn generate_default_bytecode()->Vec<u8>{
-//         let mut ret:Vec<u8> = vec![];
-//         // uuid
-//         ret.append(&mut vec![0x00;8]);
-//         // name
-//         ret.append(&mut vec![0x00]);
-//         // function_type
-//         ret.append(&mut vec![0x00]);
-//         // args_count
-//         ret.append(&mut vec![0x00]);
-//         // bytecodes
-//         ret.append(&mut vec![0x00]);
-//         ret
-//     }
-// }

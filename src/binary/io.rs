@@ -5,6 +5,16 @@ pub struct Reader {
     pos: usize,
 }
 
+pub struct Writer{
+    data: Vec<u8>
+}
+
+pub trait BinaryRW{
+    fn read(reader:&mut Reader) -> Self;
+    // TODO: implement it
+    // fn write(&self,write:&mut Writer);
+}
+
 impl Reader {
     pub fn new(data: *const u8) -> Reader {
         Reader { data, pos: 0 }
@@ -38,6 +48,13 @@ impl Reader {
             b
         }
     }
+
+    pub fn read_string(&mut self) -> String {
+        let len = self.read_u16();
+        let vec = self.read_vec(|reader| reader.read_u8());
+        String::from_utf8(vec).unwrap()
+    }
+
     pub fn read_vec<T, F>(&mut self, f: F) -> Vec<T>
     where
         F: Fn(&mut Reader) -> T,
@@ -61,5 +78,16 @@ impl Reader {
             map.insert(k,v);
         }
         map
+    }
+    pub fn read_option<T, F>(&mut self, f: F) -> Option<T>
+    where
+        F: Fn(&mut Reader) -> T,
+    {
+        let flag = self.read_u8();
+        if flag == 0x00{
+            None
+        }else{
+            Some(f(self))
+        }
     }
 }

@@ -5,12 +5,13 @@
 */
 
 use super::constant::*;
-use super::{debug::*};
+use super::{debug::*,io::{BinaryRW,Reader}};
 use std::collections::BTreeMap;
 
 #[repr(u8)]
 pub enum FunctionType{
     Function = 0x00,
+    // currently disabled
     Generator,
     // currently disabled
     AsyncFunction,
@@ -18,28 +19,77 @@ pub enum FunctionType{
     AsyncGenerator
 }
 
+impl BinaryRW for FunctionType{
+    fn read(reader:&mut Reader) -> Self {
+        let tag = reader.read_u8();
+        match tag{
+            t if tag == FunctionType::Function as u8 => FunctionType::Function,
+            _ => unimplemented!()
+        }
+    }
+}
+
 // if pc in range from to pc and state is
 // error then use jump to handler pc
 struct Exception{
-    from_pc: u16,
+    start_pc: u16,
     end_pc: u16,
     handler_pc: u16,
+}
+
+impl BinaryRW for Exception{
+    fn read(reader:&mut Reader) -> Self {
+        let start_pc = reader.read_u16();
+        let end_pc = reader.read_u16();
+        let handler_pc = reader.read_u16();
+        Exception{
+            start_pc,end_pc,handler_pc
+        }
+    }
 }
 
 struct ExceptionTable{
     table:Vec<Exception>
 }
 
+impl BinaryRW for ExceptionTable{
+    fn read(reader:&mut Reader) -> Self {
+        let table = reader.read_vec(|reader|{
+            Exception::read(reader)
+        });
+        ExceptionTable{
+            table
+        }
+    }
+}
+
 pub struct Function{
     function_type:FunctionType,
     // indexed by uuid
-    // TODO: seperate constant_pool
-    constant_pool: BTreeMap<u16,Constant>,
     // just used to build arguments object
     args_count: u8,
     max_registers: u16,
-    exception_table:ExceptionTable,
     code: Vec<u64>,
 
+    exception_table:Option<ExceptionTable>,
     debug_info:Option<DebugInfo>,
+}
+
+impl BinaryRW for Function{
+    fn read(reader:&mut Reader) -> Self {
+        let function_type = FunctionType::read(reader);
+        let args_count = reader.read_u8();
+        let max_registers = reader.read_u16();
+        let code = reader.read_vec(|reader|reader.read_u64());
+        let exception_table = reader.read_option(|reader|{
+            ExceptionTable::read(reader)
+        });
+        let debug_info = reader.read_option(|reader|{
+            DebugInfo::read(reader)
+        });
+        Function{
+            function_type,args_count,
+            max_registers,code,exception_table,debug_info
+        }
+    }
 }
