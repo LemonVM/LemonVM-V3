@@ -72,6 +72,11 @@ pub struct DebugVariable{
     pub register:u16,
 }
 
+// break points: dynamically adding break points
+pub struct DebugBreakPointTable{
+    pub table: Vec<u16>
+}
+
 impl BinaryRW for DebugVariable{
     fn read(reader:&mut Reader) -> Self {
         let name = reader.read_u16();

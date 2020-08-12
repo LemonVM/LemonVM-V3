@@ -1,7 +1,7 @@
 use super::register;
 use crate::config::*;
 
-use crate::config::*;
+use crate::{binary::function::Function, config::*};
 
 pub enum VMFunctionCallStatus{
     Error,
@@ -10,6 +10,7 @@ pub enum VMFunctionCallStatus{
 
 
 pub struct VMFunctionCallState{
+    pub function_bytecode: Function,
     pub registers: Vec<u64>,
     pub pc: u16,
     pub status:VMFunctionCallStatus,
@@ -25,10 +26,17 @@ pub struct VMState{
     // when current function returns, 
     //     pops the last element(registers) and copy them into the RegisterPool(normally on stack)
     //     the return value of the function also(
-    
     pub function_call_chain_states:Vec<VMFunctionCallState>,
     // when resume a function the heap registers will be copied into stack(depends on size)
     pub current_function_call_state: VMFunctionCallState,
+    
+    // enable debug mode will able to see the bytecode executed
+    pub debug_mode: bool,
+    // enable profile mode will display the memory usage and gc status
+    pub profile_mode: bool,
+
+    // in runtime add break point(pc) or removing a break point in current function
+    pub break_points: Vec<u16>
 }
 
 fn interpreter(state:VMState){

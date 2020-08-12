@@ -24,6 +24,16 @@ pub enum TypeTags{
         Object,
         // primitive function
         Function,
+        U8,
+        I8,
+        U16,
+        I16,
+        U32,
+        I32,
+        U64,
+        I64,
+        F32,
+        F64,
     // use to make typed array
         Opaque,
     // With extension

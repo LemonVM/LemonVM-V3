@@ -49,6 +49,50 @@ impl Reader {
         }
     }
 
+    pub fn read_i8(&mut self) -> i8 {
+        unsafe {
+            let b = *self.data.add(self.pos);
+            self.pos += 1;
+            b as i8
+        }
+    }
+    pub fn read_i16(&mut self) -> i16 {
+        unsafe {
+            let b = *(self.data.add(self.pos) as *const u16);
+            self.pos += 2;
+            b as i16
+        }
+    }
+    pub fn read_i32(&mut self) -> i32 {
+        unsafe {
+            let b = *(self.data.add(self.pos) as *const u32);
+            self.pos += 4;
+            b as i32
+        }
+    }
+    pub fn read_i64(&mut self) -> i64 {
+        unsafe {
+            let b = *(self.data.add(self.pos) as *const u64);
+            self.pos += 8;
+            b as i64
+        }
+    }
+
+    pub fn read_f32(&mut self) -> f32 {
+        unsafe {
+            let b = *(self.data.add(self.pos) as *const u32);
+            self.pos += 4;
+            b as f32
+        }
+    }
+    pub fn read_f64(&mut self) -> f64 {
+        unsafe {
+            let b = *(self.data.add(self.pos) as *const u64);
+            self.pos += 8;
+            b as f64
+        }
+    }
+
     pub fn read_string(&mut self) -> String {
         let len = self.read_u16();
         let vec = self.read_vec(|reader| reader.read_u8());
