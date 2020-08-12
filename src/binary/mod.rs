@@ -8,14 +8,16 @@ pub mod function;
 pub mod variable;
 pub mod debug;
 pub mod io;
+
+mod test;
+
+
 // TODO: More premetive types
 #[repr(u8)]
 pub enum TypeTags{
     // Primitives
         Undefined = 0,
         Null,
-        Boolean,
-        Number,
         String,
         Symbol,
     // Object

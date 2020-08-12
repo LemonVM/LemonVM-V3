@@ -11,12 +11,20 @@ pub enum OpCode{
     // IMMBOOL 0x01(true) dst
     IMMBOOL,
     // IMMI16 [0x01 0x00 0x00 0x00](1) dst
+    IMMU8,
+    IMMI8,
+    IMMU16,
+    IMMI16,
+    IMMU32,
     IMMI32,
-    // IMMNUM dst [32bit
+    // IMMX64 dst [32bit
     // EXTRA  32bit] 16bit
-    IMMNUM,
+    IMMU64,
+    IMMI64,
+    IMMF64,
+
     // IMMSTR only used to load short string for saving time of indexing constant pool
-    // similar to IMMNUM
+    // similar to IMMF64
     IMMSTR,
     // EXTRA [48bit data]
     EXTRA,
@@ -44,14 +52,15 @@ pub enum OpCode{
     CALL,
     // this ins is unstable, so normally will not generate
     // TAILCALL args-reg
-    TAILCALL,
+    // TAILCALL,
     CALLCONS,
     CALLMETHOD,
-    // RET SRC
+    // RET no return value
     RET,
-
+    // RETURN src(from father)
+    RETURN,
     // raise an error into VM status
-    // check next instruction is catch
+    // check next exception table in current function
     // if not then goto last function call satck with last pc and check recursively
     ERROR,
     // ===== ARITH =====

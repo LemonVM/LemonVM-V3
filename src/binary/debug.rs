@@ -64,11 +64,12 @@ impl BinaryRW for DebugCompiledByteCodeCommentTable{
         }
     }
 }
-
+#[derive(Debug)]
 pub struct DebugVariable{
-    name:u16,
-    start_pc:u16,
-    end_pc:u16,
+    pub name:u16,
+    pub start_pc:u16,
+    pub end_pc:u16,
+    pub register:u16,
 }
 
 impl BinaryRW for DebugVariable{
@@ -76,14 +77,15 @@ impl BinaryRW for DebugVariable{
         let name = reader.read_u16();
         let start_pc = reader.read_u16();
         let end_pc = reader.read_u16();
+        let register = reader.read_u16();
         DebugVariable{
-            name,start_pc,end_pc
+            name,start_pc,end_pc,register
         }
     }
 }
-
+#[derive(Debug)]
 pub struct DebugVariableTable{
-    table:Vec<DebugVariable>,
+    pub table:Vec<DebugVariable>,
 }
 
 impl BinaryRW for DebugVariableTable{

@@ -5,7 +5,17 @@ enum Value{
     Null,
     Undef,
     Boolean(bool),
-    Number(f64),
+
+    U8(u8),
+    I8(i8),
+    U16(u16),
+    I16(u16),
+    U32(u32),
+    I32(i32),
+    U64(u64),
+    I64(i64),
+    F32(f32),
+    F64(f64),
 
     // on gc heap
     String(*mut dyn GCObject),
@@ -25,8 +35,8 @@ impl Value{
     fn new_boolean(boolean:bool) -> Self{
         Value::Boolean(boolean)
     }
-    fn new_number(number:f64) -> Self{
-        Value::Number(number)
+    fn new_f64(f:f64) -> Self{
+        Value::F64(f)
     }
 
     fn new_string(string:String,gc:&mut dyn GC){
