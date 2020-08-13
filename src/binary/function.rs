@@ -69,7 +69,7 @@ pub struct Function{
     // just used to build arguments object
     args_count: u8,
     max_registers: u16,
-    code: Vec<u64>,
+    pub code: Vec<u64>,
 
     exception_table:Option<ExceptionTable>,
     debug_info:Option<DebugInfo>,

@@ -7,10 +7,11 @@ pub enum OpCode{
 
     // ===== LOAD =====
     // load constant
+    // LOADK dst [index] 0x0000
     LOADK,
-    // IMMBOOL 0x01(true) dst
+    // IMMBOOL dst 0x0100(true) 0x0000
     IMMBOOL,
-    // IMMI16 [0x01 0x00 0x00 0x00](1) dst
+    // IMMI16 dst [0x01 0x00 0x00 0x00](1)
     IMMU8,
     IMMI8,
     IMMU16,
@@ -36,6 +37,12 @@ pub enum OpCode{
     // ARGS src dst
     ARGS,
     
+    // ===== OBJECT? =====
+    SETVALUEBYK,
+    ADDKV,
+    INDEXK,
+    FINDKBYV,
+
 
     // ===== CONTROL FLOW =====
     // normally won't generate

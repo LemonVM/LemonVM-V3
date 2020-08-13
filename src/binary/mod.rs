@@ -8,6 +8,7 @@ pub mod function;
 pub mod variable;
 pub mod debug;
 pub mod io;
+pub mod opcode;
 
 mod test;
 
