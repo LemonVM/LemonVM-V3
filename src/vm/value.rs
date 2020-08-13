@@ -1,6 +1,6 @@
-use std::collections::BTreeMap;
 use super::gc::*;
-enum Value{
+use std::collections::BTreeMap;
+enum Value {
     // on stack
     Null,
     Undef,
@@ -25,27 +25,27 @@ enum Value{
     #[cfg(BIG_INT)]
     BigInt,
 }
-impl Value{
-    fn new_null() -> Self{
+impl Value {
+    fn new_null() -> Self {
         Value::Null
     }
-    fn new_undef() -> Self{
+    fn new_undef() -> Self {
         Value::Undef
     }
-    fn new_boolean(boolean:bool) -> Self{
+    fn new_boolean(boolean: bool) -> Self {
         Value::Boolean(boolean)
     }
-    fn new_f64(f:f64) -> Self{
+    fn new_f64(f: f64) -> Self {
         Value::F64(f)
     }
 
-    fn new_string(string:String,gc:&mut dyn GC){
+    fn new_string(string: String, gc: &mut dyn GC) {
         // TODO: gc implement
     }
-    fn new_object(object:BTreeMap<String,Value>,gc:&mut dyn GC){
+    fn new_object(object: BTreeMap<String, Value>, gc: &mut dyn GC) {
         // TODO: gc implement
     }
-    fn new_opaque(opaque:Vec<u8>,gc:&mut dyn GC){
+    fn new_opaque(opaque: Vec<u8>, gc: &mut dyn GC) {
         // TODO: gc implement
     }
 }
