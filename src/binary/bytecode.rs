@@ -66,6 +66,5 @@ impl BinaryRW for LemonVMByteCode {
         write.write_vec(&self.enabled_extensions, |write, u| write.write_u8(u));
         // TODO: unimplemented!("常量池没写");
         write.write_option(self.entry, |write, u| write.write_u16(u));
-
     }
 }

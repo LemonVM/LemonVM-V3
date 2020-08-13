@@ -187,7 +187,8 @@ impl Writer {
 
     pub fn write_map<K, V, F>(&mut self, m: &BTreeMap<K, V>, f: F)
     where
-        K: Clone, V: Clone,
+        K: Clone,
+        V: Clone,
         K: Ord,
         F: Fn(&mut Self, (K, V)),
     {

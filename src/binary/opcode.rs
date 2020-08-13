@@ -1,6 +1,6 @@
 #[repr(u16)]
 #[derive(Debug)]
-pub enum OpCode{
+pub enum OpCode {
     // use as debug
     // in debug mode will print the VM runtime info
     NOP = 0x0000,
@@ -29,20 +29,19 @@ pub enum OpCode{
     IMMSTR,
     // EXTRA [48bit data]
     EXTRA,
-    
+
     // ===== FUNCTION? =====
     // load a function into register
     CLOSURE,
     // make dst an args object, if already is , then add another arg
     // ARGS src dst
     ARGS,
-    
+
     // ===== OBJECT? =====
     SETVALUEBYK,
     ADDKV,
     INDEXK,
     FINDKBYV,
-
 
     // ===== CONTROL FLOW =====
     // normally won't generate
@@ -73,7 +72,6 @@ pub enum OpCode{
     // ===== ARITH =====
     // enable operator overload will influence the performance
     // due to it looks table rather than directly doing the arith
-
     NEG,
     PLUS,
     DEC,
@@ -94,8 +92,6 @@ pub enum OpCode{
     SHL,
     SHR,
 
-
-    
     NOT,
     LNOT,
 
@@ -107,5 +103,4 @@ pub enum OpCode{
     LT,
     GT,
     LTEQ,
-
 }

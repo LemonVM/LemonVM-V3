@@ -37,9 +37,7 @@ impl BinaryRW for DebugPrecompiledLineNumberTable {
         DebugPrecompiledLineNumberTable { table }
     }
 
-    fn write(&self, write: &mut Writer) {
-        
-    }
+    fn write(&self, write: &mut Writer) {}
 }
 
 // such as your code is compiled to bytecode

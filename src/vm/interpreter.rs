@@ -1,8 +1,11 @@
 use super::register;
 use crate::config::*;
 
-use crate::{binary::{opcode::OpCode, function::Function}, config::*};
 use super::value::Value;
+use crate::{
+    binary::{function::Function, opcode::OpCode},
+    config::*,
+};
 
 pub enum VMFunctionCallStatus {
     Error,
@@ -42,8 +45,8 @@ pub struct VMState {
 fn interpreter(state: VMState) {
     // load registers
     let mut use_regs_stack = true;
-    let mut regs_stack:[Value;MAX_REGISTER_ON_STACK] = [Value::Undef;64];
-    if state.current_function_call_state.registers.len() > MAX_REGISTER_ON_STACK{
+    let mut regs_stack: [Value; MAX_REGISTER_ON_STACK] = [Value::Undef; 64];
+    if state.current_function_call_state.registers.len() > MAX_REGISTER_ON_STACK {
         use_regs_stack = false;
     }
     if use_regs_stack {

@@ -59,61 +59,59 @@ impl BinaryRW for Constant {
             Constant::String(v) => {
                 write.write_u8(TypeTags::String as u8);
                 write.write_string(v);
-            },
+            }
             Constant::Object(v) => {
                 write.write_u8(TypeTags::Object as u8);
                 write.write_map(v, |write, (k, v): (String, Constant)| {
                     write.write_string(&k);
                     v.write(write);
                 });
-            },
+            }
             Constant::U8(v) => {
                 write.write_u8(TypeTags::U8 as u8);
                 write.write_u8(*v);
-            },
+            }
             Constant::I8(v) => {
                 write.write_u8(TypeTags::I8 as u8);
                 write.write_u8(*v as u8);
-            },
+            }
             Constant::U16(v) => {
                 write.write_u8(TypeTags::U16 as u8);
                 write.write_u16(*v as u16);
-            },
+            }
             Constant::I16(v) => {
                 write.write_u8(TypeTags::I16 as u8);
                 write.write_u16(*v as u16);
-            },
+            }
             Constant::U32(v) => {
                 write.write_u8(TypeTags::U32 as u8);
                 write.write_u32(*v as u32);
-            },
+            }
             Constant::I32(v) => {
                 write.write_u8(TypeTags::I32 as u8);
                 write.write_u32(*v as u32);
-            },
+            }
             Constant::U64(v) => {
                 write.write_u8(TypeTags::U64 as u8);
                 write.write_u64(*v as u64);
-            },
+            }
             Constant::I64(v) => {
                 write.write_u8(TypeTags::I64 as u8);
                 write.write_u64(*v as u64);
-            },
+            }
             Constant::F32(v) => {
                 write.write_u8(TypeTags::F32 as u8);
                 write.write_u32(*v as u32);
-            },
+            }
             Constant::F64(v) => {
                 write.write_u8(TypeTags::F64 as u8);
                 write.write_u64(*v as u64);
-            },
-            Constant::Function(v) => {
-                unimplemented!()
-            },
+            }
+            Constant::Function(v) => unimplemented!(),
             Constant::Opaque(v) => {
                 write.write_u8(TypeTags::Opaque as u8);
                 write.write_vec(v, |r, v| r.write_u8(v));
-            },
+            }
         }
     }
 }
