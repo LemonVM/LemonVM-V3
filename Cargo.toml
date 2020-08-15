@@ -12,4 +12,7 @@ path = "src/lib.rs"
 name = "lemonvm_repl"
 path = "src/main.rs"
 
+[dev-dependencies]
+
 [dependencies]
+rand = "*"

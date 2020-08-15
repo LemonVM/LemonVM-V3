@@ -38,10 +38,13 @@ pub enum OpCode {
     ARGS,
 
     // ===== OBJECT? =====
-    SETVALUEBYK,
+    SETV,
     ADDKV,
-    INDEXK,
+    INDEXV,
     FINDKBYV,
+    // NEW [uuid filename] dst
+    NEWOBJF,
+    NEWOBJ,
 
     // ===== CONTROL FLOW =====
     // normally won't generate
@@ -84,6 +87,13 @@ pub enum OpCode {
     MUL,
     MOD,
     DIV,
+
+    // safe arith
+    ADDS,
+    SUBS,
+    MULS,
+    MODS,
+    DIVS,
 
     BNOT,
     BAND,

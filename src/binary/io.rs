@@ -1,3 +1,4 @@
+#[macro_use]
 use std::collections::BTreeMap;
 
 pub struct Reader {
@@ -6,12 +7,53 @@ pub struct Reader {
 }
 
 pub struct Writer {
-    data: Vec<u8>,
+    pub data: Vec<u8>,
 }
 
 pub trait BinaryRW {
     fn read(reader: &mut Reader) -> Self;
-    fn write(&self, write: &mut Writer);
+    fn write(&self, writer: &mut Writer);
+    
+    // #[cfg(mock)]
+    fn mock_data() -> Vec<Box<Self>>;
+}
+
+// #[cfg(mock)]
+pub fn mock_string() -> String{
+    use rand::*;
+    let mut ret:String = String::new();
+    for i in 0..10{
+        ret.push('草');
+    }
+    ret
+}
+
+#[macro_export]
+macro_rules! gen_test_reader_writer_for_type {
+    ($f:ident,$t:ident) => {
+        #[test]
+        fn $f(){
+            let data = $t::mock_data();
+            for d in data{
+                let mut writer = Writer::new();
+                d.write(&mut writer);
+                let raw_data = writer.data.as_mut_ptr();
+                let mut reader = Reader::new(raw_data);
+                let read = $t::read(&mut reader);
+                assert_eq!(*d,read)
+            }
+        }
+    };
+}
+
+// #[cfg(mock)]
+pub fn mock_object<K:Ord,V>(kf:&dyn Fn()->K,vf:&dyn Fn()->V) -> BTreeMap<K,V>{
+    use rand::*;
+    let mut ret:BTreeMap<K,V> = BTreeMap::new();
+    for i in 0..10{
+        ret.insert(kf(),vf());
+    }
+    ret
 }
 
 impl Reader {
@@ -79,21 +121,37 @@ impl Reader {
 
     pub fn read_f32(&mut self) -> f32 {
         unsafe {
-            let b = *(self.data.add(self.pos) as *const u32);
+            let i = *(self.data.add(self.pos) as *const u32);
             self.pos += 4;
-            b as f32
+            let bt = [
+                i as u8,
+                (i >> 8) as u8,
+                (i >> 16) as u8,
+                (i >> 24) as u8,
+            ];
+            f32::from_be_bytes(bt)
         }
     }
     pub fn read_f64(&mut self) -> f64 {
+
         unsafe {
-            let b = *(self.data.add(self.pos) as *const u64);
+            let i = *(self.data.add(self.pos) as *const u64);
             self.pos += 8;
-            b as f64
+            let bt = [
+                i as u8,
+                (i >> 8) as u8,
+                (i >> 16) as u8,
+                (i >> 24) as u8,
+                (i >> 32) as u8,
+                (i >> 40) as u8,
+                (i >> 48) as u8,
+                (i >> 56) as u8,
+            ];
+            f64::from_be_bytes(bt)
         }
     }
 
     pub fn read_string(&mut self) -> String {
-        let len = self.read_u16();
         let vec = self.read_vec(|reader| reader.read_u8());
         String::from_utf8(vec).unwrap()
     }
@@ -166,15 +224,29 @@ impl Writer {
             (i >> 32) as u8,
             (i >> 40) as u8,
             (i >> 48) as u8,
+            (i >> 56) as u8,
         ]);
     }
 
-    pub fn write_string(&mut self, i: &String) {
-        self.write_u16(i.len() as u16);
-        self.data.append(&mut i.clone().into_bytes());
+    pub fn write_f32(&mut self, i: f32) {
+        let d = i.to_be_bytes();
+        self.data.append(&mut d.into());
     }
 
-    pub fn write_vec<T, F>(&mut self, inp: &Vec<T>, f: F)
+    pub fn write_f64(&mut self, i: f64) {
+        let d = i.to_be_bytes();
+        self.data.append(&mut d.into());
+    }
+
+    pub fn write_string(&mut self, i: String) {
+        let bytes = i.as_bytes();
+        self.write_u16(bytes.len() as u16);
+        for b in bytes{
+            self.write_u8(*b);
+        }
+    }
+
+    pub fn write_vec<T, F>(&mut self, inp: Vec<T>, f: F)
     where
         T: Clone,
         F: Fn(&mut Self, T),
@@ -185,7 +257,7 @@ impl Writer {
         }
     }
 
-    pub fn write_map<K, V, F>(&mut self, m: &BTreeMap<K, V>, f: F)
+    pub fn write_map<K, V, F>(&mut self, m: BTreeMap<K, V>, f: F)
     where
         K: Clone,
         V: Clone,

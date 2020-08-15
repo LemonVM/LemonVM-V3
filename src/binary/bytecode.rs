@@ -58,13 +58,26 @@ impl BinaryRW for LemonVMByteCode {
             variables,
         }
     }
-    fn write(&self, write: &mut Writer) {
+    fn write(&self, writer: &mut Writer) {
         for i in self.signature.iter() {
-            write.write_u8(*i);
+            writer.write_u8(*i);
         }
-        write.write_u32(self.version);
-        write.write_vec(&self.enabled_extensions, |write, u| write.write_u8(u));
-        // TODO: unimplemented!("常量池没写");
-        write.write_option(self.entry, |write, u| write.write_u16(u));
+        writer.write_u32(self.version);
+        writer.write_vec(self.enabled_extensions.clone(), |write, u| {
+            write.write_u8(u)
+        });
+        writer.write_map(self.constant_pool.clone(), |writer,(id,c)| {writer.write_u16(id);
+            c.write(writer);
+        } );
+        writer.write_option(self.entry, |write, u| write.write_u16(u));
+        writer.write_vec(self.variables.clone(), |writer,i|i.write(writer))
+    }
+
+    //TODO: i don't think this need test
+    // #[cfg(mock)]
+    fn mock_data() -> Vec<Box<Self>>{
+        use rand::*;
+        let mut ret = vec![];
+        ret
     }
 }

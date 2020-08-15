@@ -7,12 +7,13 @@
 use super::constant::*;
 use super::{
     debug::*,
-    io::{BinaryRW, Reader},
+    io::{BinaryRW, Reader,Writer},
 };
 use std::collections::BTreeMap;
+use crate::gen_test_reader_writer_for_type;
 
 #[repr(u8)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum FunctionType {
     Function = 0x00,
     // currently disabled
@@ -31,14 +32,26 @@ impl BinaryRW for FunctionType {
             _ => unimplemented!(),
         }
     }
-    fn write(&self, write: &mut super::io::Writer) {
-        todo!()
+    fn write(&self, writer: &mut super::io::Writer) {
+        writer.write_u8(self.clone() as u8);
+    }
+    // #[cfg(mock)]
+    fn mock_data() -> Vec<Box<Self>>{
+        use rand::*;
+        let mut ret = vec![];
+        for _ in 0..10{
+            //TODO: when all implemented change that
+            ret.push(Box::new(FunctionType::Function));
+        }
+        ret
     }
 }
 
+gen_test_reader_writer_for_type!(test_rw_mock_FunctionType,FunctionType);
+
 // if pc in range from to pc and state is
 // error then use jump to handler pc
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 struct Exception {
     start_pc: u16,
     end_pc: u16,
@@ -56,12 +69,30 @@ impl BinaryRW for Exception {
             handler_pc,
         }
     }
-    fn write(&self, write: &mut super::io::Writer) {
-        todo!()
+    fn write(&self, writer: &mut super::io::Writer) {
+        writer.write_u16(self.start_pc);
+        writer.write_u16(self.end_pc);
+        writer.write_u16(self.handler_pc);
+    }
+
+    // #[cfg(mock)]
+    fn mock_data() -> Vec<Box<Self>>{
+        use rand::*;
+        let mut ret = vec![];
+        for _ in 0..10{
+            ret.push(Box::new(Exception{
+                start_pc: random(),
+                end_pc: random(),
+                handler_pc: random(),
+            }));
+        }
+        ret
     }
 }
 
-#[derive(Debug, Clone)]
+gen_test_reader_writer_for_type!(test_rw_mock_Exception,Exception);
+
+#[derive(Debug, Clone, PartialEq)]
 struct ExceptionTable {
     table: Vec<Exception>,
 }
@@ -71,12 +102,25 @@ impl BinaryRW for ExceptionTable {
         let table = reader.read_vec(|reader| Exception::read(reader));
         ExceptionTable { table }
     }
-    fn write(&self, write: &mut super::io::Writer) {
-        todo!()
+    fn write(&self, writer: &mut super::io::Writer) {
+        writer.write_vec(self.table.clone(), |writer, o| Exception::write(&o, writer));
+    }
+    // #[cfg(mock)]
+    fn mock_data() -> Vec<Box<Self>>{
+        use rand::*;
+        let mut ret = vec![];
+        for _ in 0..10{
+            ret.push(Box::new(ExceptionTable{
+                table: Exception::mock_data().iter().map(|d| (&**d).clone()).collect()
+            }));
+        }
+        ret
     }
 }
 
-#[derive(Debug, Clone)]
+gen_test_reader_writer_for_type!(test_rw_mock_ExceptionTable,ExceptionTable);
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct Function {
     function_type: FunctionType,
     // indexed by uuid
@@ -106,7 +150,45 @@ impl BinaryRW for Function {
             debug_info,
         }
     }
-    fn write(&self, write: &mut super::io::Writer) {
-        todo!()
+    fn write(&self, writer: &mut super::io::Writer) {
+        FunctionType::write(&self.function_type, writer);
+        writer.write_u8(self.args_count);
+        writer.write_u16(self.max_registers);
+        writer.write_vec(self.code.clone(), |writer, v| writer.write_u64(v));
+        writer.write_option(self.exception_table.clone(), |writer, o| {
+            ExceptionTable::write(&o, writer)
+        });
+        writer.write_option(self.debug_info.clone(), |writer, o| {
+            DebugInfo::write(&o, writer)
+        });
+    }
+
+    // #[cfg(mock)]
+    fn mock_data() -> Vec<Box<Self>>{
+        use rand::*;
+        let mut ret = vec![];
+        for _ in 0..10{
+            let mut vecu64 = vec![];
+            for i in 0u8..random(){
+                vecu64.push(random());
+            }
+            let function_type = (&*FunctionType::mock_data()[0]).clone();
+            let args_count = random();
+            let max_registers = random();
+            let code = vecu64;
+            let exception_table = None;
+            let debug_info = if random() {Some((&*DebugInfo::mock_data()[0]).clone())}else{None};
+            ret.push(Box::new(Function{
+                function_type,
+                args_count,
+                max_registers,
+                code,
+                exception_table,
+                debug_info,  
+            }));
+        }
+        ret
     }
 }
+
+gen_test_reader_writer_for_type!(test_rw_mock_Function,Function);

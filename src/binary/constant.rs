@@ -4,12 +4,11 @@ use super::{
     TypeTags,
 };
 use std::collections::BTreeMap;
+use crate::gen_test_reader_writer_for_type;
 // type tag + data
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Constant {
     String(String),
-    // object
-    Object(BTreeMap<String, Constant>),
     U8(u8),
     I8(i8),
     U16(u16),
@@ -20,6 +19,8 @@ pub enum Constant {
     I64(i64),
     F32(f32),
     F64(f64),
+
+    Object(BTreeMap<String, Constant>),
     Function(Function),
 
     Opaque(Vec<u8>),
@@ -32,86 +33,111 @@ impl BinaryRW for Constant {
     fn read(reader: &mut Reader) -> Self {
         let tag = reader.read_u8();
         match tag {
-            t if TypeTags::String as u8 == tag => Constant::String(reader.read_string()),
-            t if TypeTags::Object as u8 == tag => Constant::Object(
+            _ if TypeTags::String as u8 == tag => Constant::String(reader.read_string()),
+            _ if TypeTags::Object as u8 == tag => Constant::Object(
                 reader.read_map(|reader| (reader.read_string(), Constant::read(reader))),
             ),
-            t if TypeTags::U8 as u8 == tag => Constant::U8(reader.read_u8()),
-            t if TypeTags::I8 as u8 == tag => Constant::I8(reader.read_i8()),
-            t if TypeTags::U16 as u8 == tag => Constant::U16(reader.read_u16()),
-            t if TypeTags::I16 as u8 == tag => Constant::I16(reader.read_i16()),
-            t if TypeTags::U32 as u8 == tag => Constant::U32(reader.read_u32()),
-            t if TypeTags::I32 as u8 == tag => Constant::I32(reader.read_i32()),
-            t if TypeTags::U64 as u8 == tag => Constant::U64(reader.read_u64()),
-            t if TypeTags::I64 as u8 == tag => Constant::I64(reader.read_i64()),
-            t if TypeTags::F32 as u8 == tag => Constant::F32(reader.read_f32()),
-            t if TypeTags::F64 as u8 == tag => Constant::F64(reader.read_f64()),
-            t if TypeTags::Opaque as u8 == tag => {
+            _ if TypeTags::U8 as u8 == tag => Constant::U8(reader.read_u8()),
+            _ if TypeTags::I8 as u8 == tag => Constant::I8(reader.read_i8()),
+            _ if TypeTags::U16 as u8 == tag => Constant::U16(reader.read_u16()),
+            _ if TypeTags::I16 as u8 == tag => Constant::I16(reader.read_i16()),
+            _ if TypeTags::U32 as u8 == tag => Constant::U32(reader.read_u32()),
+            _ if TypeTags::I32 as u8 == tag => Constant::I32(reader.read_i32()),
+            _ if TypeTags::U64 as u8 == tag => Constant::U64(reader.read_u64()),
+            _ if TypeTags::I64 as u8 == tag => Constant::I64(reader.read_i64()),
+            _ if TypeTags::F32 as u8 == tag => Constant::F32(reader.read_f32()),
+            _ if TypeTags::F64 as u8 == tag => Constant::F64(reader.read_f64()),
+            _ if TypeTags::Opaque as u8 == tag => {
                 Constant::Opaque(reader.read_vec(|reader| reader.read_u8()))
             }
-            t if TypeTags::Function as u8 == tag => Constant::Function(Function::read(reader)),
+            _ if TypeTags::Function as u8 == tag => Constant::Function(Function::read(reader)),
             _ => unimplemented!(),
         }
     }
 
-    fn write(&self, write: &mut Writer) {
+    fn write(&self, writer: &mut Writer) {
         match self {
             Constant::String(v) => {
-                write.write_u8(TypeTags::String as u8);
-                write.write_string(v);
+                writer.write_u8(TypeTags::String as u8);
+                writer.write_string(v.clone());
             }
             Constant::Object(v) => {
-                write.write_u8(TypeTags::Object as u8);
-                write.write_map(v, |write, (k, v): (String, Constant)| {
-                    write.write_string(&k);
+                writer.write_u8(TypeTags::Object as u8);
+                writer.write_map(v.clone(), |write, (k, v): (String, Constant)| {
+                    write.write_string(k.clone());
                     v.write(write);
                 });
             }
             Constant::U8(v) => {
-                write.write_u8(TypeTags::U8 as u8);
-                write.write_u8(*v);
+                writer.write_u8(TypeTags::U8 as u8);
+                writer.write_u8(*v);
             }
             Constant::I8(v) => {
-                write.write_u8(TypeTags::I8 as u8);
-                write.write_u8(*v as u8);
+                writer.write_u8(TypeTags::I8 as u8);
+                writer.write_u8(*v as u8);
             }
             Constant::U16(v) => {
-                write.write_u8(TypeTags::U16 as u8);
-                write.write_u16(*v as u16);
+                writer.write_u8(TypeTags::U16 as u8);
+                writer.write_u16(*v as u16);
             }
             Constant::I16(v) => {
-                write.write_u8(TypeTags::I16 as u8);
-                write.write_u16(*v as u16);
+                writer.write_u8(TypeTags::I16 as u8);
+                writer.write_u16(*v as u16);
             }
             Constant::U32(v) => {
-                write.write_u8(TypeTags::U32 as u8);
-                write.write_u32(*v as u32);
+                writer.write_u8(TypeTags::U32 as u8);
+                writer.write_u32(*v as u32);
             }
             Constant::I32(v) => {
-                write.write_u8(TypeTags::I32 as u8);
-                write.write_u32(*v as u32);
+                writer.write_u8(TypeTags::I32 as u8);
+                writer.write_u32(*v as u32);
             }
             Constant::U64(v) => {
-                write.write_u8(TypeTags::U64 as u8);
-                write.write_u64(*v as u64);
+                writer.write_u8(TypeTags::U64 as u8);
+                writer.write_u64(*v as u64);
             }
             Constant::I64(v) => {
-                write.write_u8(TypeTags::I64 as u8);
-                write.write_u64(*v as u64);
+                writer.write_u8(TypeTags::I64 as u8);
+                writer.write_u64(*v as u64);
             }
             Constant::F32(v) => {
-                write.write_u8(TypeTags::F32 as u8);
-                write.write_u32(*v as u32);
+                writer.write_u8(TypeTags::F32 as u8);
+                writer.write_f32(*v);
             }
             Constant::F64(v) => {
-                write.write_u8(TypeTags::F64 as u8);
-                write.write_u64(*v as u64);
+                writer.write_u8(TypeTags::F64 as u8);
+                writer.write_f64(*v);
             }
-            Constant::Function(v) => unimplemented!(),
+            Constant::Function(v) => {
+                writer.write_u8(TypeTags::Function as u8);
+                v.write(writer);
+            },
             Constant::Opaque(v) => {
-                write.write_u8(TypeTags::Opaque as u8);
-                write.write_vec(v, |r, v| r.write_u8(v));
+                writer.write_u8(TypeTags::Opaque as u8);
+                writer.write_vec(v.clone(), |r, v| r.write_u8(v));
             }
         }
     }
+
+    // #[cfg(mock)]
+    fn mock_data() -> Vec<Box<Self>>{
+        use rand::*;
+        use crate::binary::io::*;
+        vec![
+            Box::new(Constant::String(mock_string())),
+            Box::new(Constant::U8(random())),
+            Box::new(Constant::I8(random())),
+            Box::new(Constant::U16(random())),
+            Box::new(Constant::I16(random())),
+            Box::new(Constant::U32(random())),
+            Box::new(Constant::I32(random())),
+            Box::new(Constant::U64(random())),
+            Box::new(Constant::I64(random())),
+            Box::new(Constant::F32(random())),
+            Box::new(Constant::F64(random())),
+            Box::new(Constant::Object(mock_object(&||mock_string(),&||Constant::U8(random())))),
+            Box::new(Constant::Function((&*Function::mock_data()[0]).clone()))
+        ]
+    }
 }
+gen_test_reader_writer_for_type!(test_rw_mock_Constant,Constant);

@@ -1,6 +1,6 @@
 use super::gc::*;
 use std::collections::BTreeMap;
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Value {
     // on stack
     Null,
