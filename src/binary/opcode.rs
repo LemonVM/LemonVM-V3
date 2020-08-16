@@ -38,6 +38,8 @@ pub enum OpCode {
     ARGS,
 
     // ===== OBJECT? =====
+    // An object is an runtime defined anonymous object
+    // or loaded a dynamic(which means has state) module(lmvmb file loaded) instance
     SETV,
     ADDKV,
     INDEXV,

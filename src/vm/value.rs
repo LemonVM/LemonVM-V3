@@ -26,6 +26,7 @@ pub enum Value {
     #[cfg(BIG_INT)]
     BigInt,
 }
+
 impl Value {
     fn new_null() -> Self {
         Value::Null
