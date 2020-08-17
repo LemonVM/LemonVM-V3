@@ -123,10 +123,11 @@ gen_test_reader_writer_for_type!(test_rw_mock_ExceptionTable,ExceptionTable);
 #[derive(Debug, Clone, PartialEq)]
 pub struct Function {
     function_type: FunctionType,
-    // indexed by uuid
-    // just used to build arguments object
-    args_count: u8,
-    max_registers: u16,
+    // for example
+    // args count is 3 f(a,b,c) will automatically use 4 register
+    // the forth one is vargs
+    pub args_count: u8,
+    pub max_registers: u16,
     pub code: Vec<u64>,
 
     exception_table: Option<ExceptionTable>,

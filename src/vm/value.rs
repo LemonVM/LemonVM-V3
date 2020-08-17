@@ -19,6 +19,7 @@ pub enum Value {
     F64(f64),
 
     // on gc heap
+    Vector(*mut dyn GCObject),
     String(*mut dyn GCObject),
     Object(*mut dyn GCObject),
     Opaque(*mut dyn GCObject),

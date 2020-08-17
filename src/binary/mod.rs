@@ -21,6 +21,7 @@ pub enum TypeTags {
     Null,
     String,
     Symbol,
+    Vector,
     // Object
     Object,
     // primitive function

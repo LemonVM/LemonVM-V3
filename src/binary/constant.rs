@@ -21,6 +21,7 @@ pub enum Constant {
     F64(f64),
 
     Object(BTreeMap<String, Constant>),
+    Vector(Vec<Constant>),
     Function(Function),
 
     Opaque(Vec<u8>),
@@ -37,6 +38,9 @@ impl BinaryRW for Constant {
             _ if TypeTags::Object as u8 == tag => Constant::Object(
                 reader.read_map(|reader| (reader.read_string(), Constant::read(reader))),
             ),
+            _ if TypeTags::Vector as u8 == tag => {
+                Constant::Vector(reader.read_vec(|reader| Constant::read(reader)))
+            },
             _ if TypeTags::U8 as u8 == tag => Constant::U8(reader.read_u8()),
             _ if TypeTags::I8 as u8 == tag => Constant::I8(reader.read_i8()),
             _ if TypeTags::U16 as u8 == tag => Constant::U16(reader.read_u16()),
@@ -108,6 +112,10 @@ impl BinaryRW for Constant {
                 writer.write_u8(TypeTags::F64 as u8);
                 writer.write_f64(*v);
             }
+            Constant::Vector(v) => {
+                writer.write_u8(TypeTags::Vector as u8);
+                writer.write_vec(v.clone(), |writer,v| v.write(writer));
+            }
             Constant::Function(v) => {
                 writer.write_u8(TypeTags::Function as u8);
                 v.write(writer);
@@ -136,7 +144,13 @@ impl BinaryRW for Constant {
             Box::new(Constant::F32(random())),
             Box::new(Constant::F64(random())),
             Box::new(Constant::Object(mock_object(&||mock_string(),&||Constant::U8(random())))),
-            Box::new(Constant::Function((&*Function::mock_data()[0]).clone()))
+            Box::new(Constant::Function((&*Function::mock_data()[0]).clone())),
+            Box::new(Constant::Vector(vec![
+                Constant::U8(random()),
+                Constant::U64(random()),
+                Constant::Object(mock_object(&||mock_string(),&||Constant::U8(random()))),
+                Constant::Function((&*Function::mock_data()[0]).clone())
+                ]),),
         ]
     }
 }
