@@ -25,6 +25,14 @@ pub struct LemonVMByteCode {
     signature: [u8; 5],
     version: u32,
     enabled_extensions: Vec<u8>,
+    // find in constant pool
+    // before loading the bytecode first check the name exist in the vm instance
+    // then check the version
+    // if all equal do nothing
+    // if (version | name) not equal load
+    module_name: u16,
+    module_version: u32,
+
     // format
     // u32 len
     // u16 value(tag data)
@@ -46,12 +54,16 @@ impl BinaryRW for LemonVMByteCode {
         let signature = [s1, s2, s3, s4, s5];
         let version = reader.read_u32();
         let enabled_extensions = reader.read_vec(|reader| reader.read_u8());
+        let module_name = reader.read_u16();
+        let module_version = reader.read_u32();
         let constant_pool = reader.read_map(|reader| (reader.read_u16(), Constant::read(reader)));
         let entry = reader.read_option(|reader| reader.read_u16());
         let variables = reader.read_vec(|reader| Variable::read(reader));
         LemonVMByteCode {
             signature,
             version,
+            module_name,
+            module_version,
             enabled_extensions,
             constant_pool,
             entry,

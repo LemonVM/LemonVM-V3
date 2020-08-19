@@ -1,4 +1,4 @@
-use super::value::Value;
+use super::{VMClosure, value::Value};
 use std::{ptr::NonNull, collections::BTreeMap};
 
 // a good gc that targetting a big project
@@ -13,6 +13,7 @@ pub mod onclosegc;
 // !!! ATTENSION PARTIALEQ IS COMPARING POINTER !!!
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum GCValue{
+    Closure(NonNull<dyn GCBlock>),
     String(NonNull<dyn GCBlock>),
     Opaque(NonNull<dyn GCBlock>),
     Vector(NonNull<dyn GCBlock>),
@@ -24,6 +25,7 @@ impl GCValue{
     // should only used in gc implementation
     fn get_block(&self) -> NonNull<dyn GCBlock>{
         match self{
+            GCValue::Closure(x) => *x,
             GCValue::String(x) => *x,
             GCValue::Opaque(x) => *x,
             GCValue::Vector(x) => *x,
@@ -34,6 +36,7 @@ impl GCValue{
     // get size in byte
     fn get_data_size(&self) -> usize{
         match self{
+            GCValue::Closure(x) => unsafe{x.as_ref().get_data_size()}
             GCValue::String(x) => unsafe{x.as_ref().get_data_size()},
             GCValue::Opaque(x) => unsafe{x.as_ref().get_data_size()},
             GCValue::Vector(x) => unsafe{x.as_ref().get_data_size()},
@@ -44,6 +47,7 @@ impl GCValue{
 }
 
 pub enum GCInnerValue{
+    Closure(VMClosure),
     String(String),
     Opaque(Vec<u8>),
     Vector(Vec<Value>),

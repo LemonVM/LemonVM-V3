@@ -122,6 +122,7 @@ gen_test_reader_writer_for_type!(test_rw_mock_ExceptionTable,ExceptionTable);
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Function {
+    is_multi_return_function:bool,
     function_type: FunctionType,
     // for example
     // args count is 3 f(a,b,c) will automatically use 4 register
@@ -136,6 +137,7 @@ pub struct Function {
 
 impl BinaryRW for Function {
     fn read(reader: &mut Reader) -> Self {
+        let is_multi_return_function = reader.read_u8() != 0x00;
         let function_type = FunctionType::read(reader);
         let args_count = reader.read_u8();
         let max_registers = reader.read_u16();
@@ -143,6 +145,7 @@ impl BinaryRW for Function {
         let exception_table = reader.read_option(|reader| ExceptionTable::read(reader));
         let debug_info = reader.read_option(|reader| DebugInfo::read(reader));
         Function {
+            is_multi_return_function,
             function_type,
             args_count,
             max_registers,
@@ -152,6 +155,7 @@ impl BinaryRW for Function {
         }
     }
     fn write(&self, writer: &mut super::io::Writer) {
+        writer.write_u8(if self.is_multi_return_function {0xFF}else{0x00});
         FunctionType::write(&self.function_type, writer);
         writer.write_u8(self.args_count);
         writer.write_u16(self.max_registers);
@@ -173,6 +177,7 @@ impl BinaryRW for Function {
             for i in 0u8..random(){
                 vecu64.push(random());
             }
+            let is_multi_return_function = random();
             let function_type = (&*FunctionType::mock_data()[0]).clone();
             let args_count = random();
             let max_registers = random();
@@ -180,6 +185,7 @@ impl BinaryRW for Function {
             let exception_table = None;
             let debug_info = if random() {Some((&*DebugInfo::mock_data()[0]).clone())}else{None};
             ret.push(Box::new(Function{
+                is_multi_return_function,
                 function_type,
                 args_count,
                 max_registers,

@@ -7,7 +7,7 @@ pub enum OpCode {
 
     // ===== LOAD =====
     // load constant
-    // LOADK dst [index] 0x0000
+    // LOADK dst [index] [module_name_index or 0xFFFF(local)]
     LOADK,
     // IMMBOOL dst 0x0100(true) 0x0000
     IMMBOOL,
@@ -22,6 +22,7 @@ pub enum OpCode {
     // EXTRA  32bit] 16bit
     IMMU64,
     IMMI64,
+    IMMF32,
     IMMF64,
 
     // IMMSTR only used to load short string for saving time of indexing constant pool
@@ -36,16 +37,23 @@ pub enum OpCode {
     // make dst an args object, if already is , then add another arg
     // ARGS src dst
     ARGS,
+    // use to set multiple return value
+    RETS,
 
-    // ===== OBJECT? =====
+    // ===== OBJECT and MODULE =====
     // An object is an runtime defined anonymous object
     // or loaded a dynamic(which means has state) module(lmvmb file loaded) instance
+    
+    // LOADMODULE will load module into the vmstate
+    // LOADMODULE [module_name_index or 0xFFFF(local)]
+    LOADMODULE,
+    // NEWOBJM dst [module_name_index or 0xFFFF(local)]
+    NEWOBJM,
     SETV,
     ADDKV,
     INDEXV,
     FINDKBYV,
-    // NEW [uuid filename] dst
-    NEWOBJF,
+    // NEWOBJ dst
     NEWOBJ,
 
     // ===== CONTROL FLOW =====
@@ -68,8 +76,10 @@ pub enum OpCode {
     CALLMETHOD,
     // RET no return value
     RET,
-    // RETURN src(from father)
+    // RETURN src dst(from father)
     RETURN,
+    // RETURNM src(RETS) dst(from father)
+    RETURNM, 
     // raise an error into VM status
     // check next exception table in current function
     // if not then goto last function call satck with last pc and check recursively
