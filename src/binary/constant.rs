@@ -20,7 +20,7 @@ pub enum Constant {
     F32(f32),
     F64(f64),
 
-    Object(BTreeMap<String, Constant>),
+    Map(BTreeMap<String, Constant>),
     Vector(Vec<Constant>),
     Function(Function),
 
@@ -35,7 +35,7 @@ impl BinaryRW for Constant {
         let tag = reader.read_u8();
         match tag {
             _ if TypeTags::String as u8 == tag => Constant::String(reader.read_string()),
-            _ if TypeTags::Object as u8 == tag => Constant::Object(
+            _ if TypeTags::Map as u8 == tag => Constant::Map(
                 reader.read_map(|reader| (reader.read_string(), Constant::read(reader))),
             ),
             _ if TypeTags::Vector as u8 == tag => {
@@ -65,8 +65,8 @@ impl BinaryRW for Constant {
                 writer.write_u8(TypeTags::String as u8);
                 writer.write_string(v.clone());
             }
-            Constant::Object(v) => {
-                writer.write_u8(TypeTags::Object as u8);
+            Constant::Map(v) => {
+                writer.write_u8(TypeTags::Map as u8);
                 writer.write_map(v.clone(), |write, (k, v): (String, Constant)| {
                     write.write_string(k.clone());
                     v.write(write);
@@ -143,12 +143,12 @@ impl BinaryRW for Constant {
             Box::new(Constant::I64(random())),
             Box::new(Constant::F32(random())),
             Box::new(Constant::F64(random())),
-            Box::new(Constant::Object(mock_object(&||mock_string(),&||Constant::U8(random())))),
+            Box::new(Constant::Map(mock_object(&||mock_string(),&||Constant::U8(random())))),
             Box::new(Constant::Function((&*Function::mock_data()[0]).clone())),
             Box::new(Constant::Vector(vec![
                 Constant::U8(random()),
                 Constant::U64(random()),
-                Constant::Object(mock_object(&||mock_string(),&||Constant::U8(random()))),
+                Constant::Map(mock_object(&||mock_string(),&||Constant::U8(random()))),
                 Constant::Function((&*Function::mock_data()[0]).clone())
                 ]),),
         ]

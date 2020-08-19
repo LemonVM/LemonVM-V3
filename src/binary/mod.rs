@@ -22,8 +22,8 @@ pub enum TypeTags {
     String,
     Symbol,
     Vector,
-    // Object
-    Object,
+    // Map
+    Map,
     // primitive function
     Function,
     U8,

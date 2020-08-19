@@ -17,15 +17,8 @@ pub enum Value {
     I64(i64),
     F32(f32),
     F64(f64),
-
     // on gc heap
-    Vector(*mut dyn GCObject),
-    String(*mut dyn GCObject),
-    Object(*mut dyn GCObject),
-    Opaque(*mut dyn GCObject),
-    // TODO: finish
-    #[cfg(BIG_INT)]
-    BigInt,
+    GCValue(GCValue),
 }
 
 impl Value {

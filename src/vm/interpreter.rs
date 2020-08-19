@@ -23,6 +23,7 @@ pub enum VMFunctionCallStatus {
 #[derive(Debug, Clone, PartialEq)]
 pub struct VMFunctionCallState {
     pub function_bytecode: Function,
+    pub vargs: Vec<Value>,
     pub registers: Vec<Value>,
     pub pc: u16,
     pub status: VMFunctionCallStatus,
@@ -43,7 +44,7 @@ impl VMFunctionCallState{
             self.registers[i] = aobj.args.pop().unwrap_or(Value::Undef);
         }
         if aobj.args.len() > 0{
-            // TODO: Vec
+            self.vargs.append(&mut aobj.args);
         }
     }
 }
@@ -85,7 +86,7 @@ fn interpreter(state: VMState) {
     let mut stack_regs: [Value; MAX_REGISTER_ON_STACK] = [Value::Undef; 64];
     //  copy register to stack
     for r in 0..current_function_state.registers.len() {
-        stack_regs[r] = current_function_state.registers[r];
+        stack_regs[r] = current_function_state.registers[r].clone();
     }
     let mut pc = current_function_state.pc;
     loop {
