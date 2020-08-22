@@ -31,9 +31,119 @@ pub enum OpCode {
     // EXTRA [48bit data]
     EXTRA,
 
+    // ===== ARITH =====
+    // enable operator overload will influence the performance
+    // due to it looks table rather than directly doing the arith
+    
+    // Ix will neg imm
+    // Ux will cast to Ix then neg
+    // NEG dst
+    NEG,
+    // Ix will neg imm
+    // Ux and other will panic
+    // TODO: throw exception
+    SNEG,
+    // INT will -1
+    // FLOAT will -1.0
+    // DEC dst
+    DEC,
+    // INT will +1
+    // FLOAT will +1.0
+    // DEC dst
+    INC,
+    // DEC but checking for overflow and 
+    // non int value type not allowed
+    SDEC,
+    // similar but inc
+    SINC,
+
+    // format INS src1 src2 dst
+
+    ADD8,
+    SUB8,
+    MUL8,
+    MOD8,
+    DIV8,
+
+    ADD16,
+    SUB16,
+    MUL16,
+    MOD16,
+    DIV16,
+
+    ADD32,
+    SUB32,
+    MUL32,
+    MOD32,
+    DIV32,
+
+    ADD64,
+    SUB64,
+    MUL64,
+    MOD64,
+    DIV64,
+
+    ADDF32,
+    SUBF32,
+    MULF32,
+    MODF32,
+    DIVF32,
+
+    ADDF64,
+    SUBF64,
+    MULF64,
+    MODF64,
+    DIVF64,
+
+    // safe arith
+    // check value that make sure is not overflow
+    // check for minus unsigned value
+    // check for div 0
+    SADD8,
+    SSUB8,
+    SMUL8,
+    SMOD8,
+    SDIV8,
+
+    SADD16,
+    SSUB16,
+    SMUL16,
+    SMOD16,
+    SDIV16,
+
+    SADD32,
+    SSUB32,
+    SMUL32,
+    SMOD32,
+    SDIV32,
+
+    SADD64,
+    SSUB64,
+    SMUL64,
+    SMOD64,
+    SDIV64,
+
+    BNOT,
+    BAND,
+    BOR,
+    BXOR,
+    SHL,
+    SHR,
+
+    NOT,
+    LNOT,
+
+    EQ,
+    SEQ,
+    NEQ,
+    NSEQ,
+
+    LT,
+    GT,
+    LTEQ,
+
+
     // ===== FUNCTION? =====
-    // load a function into register
-    CLOSURE,
     // make dst an args object, if already is , then add another arg
     // ARGS src dst
     ARGS,
@@ -84,45 +194,4 @@ pub enum OpCode {
     // check next exception table in current function
     // if not then goto last function call satck with last pc and check recursively
     ERROR,
-    // ===== ARITH =====
-    // enable operator overload will influence the performance
-    // due to it looks table rather than directly doing the arith
-    NEG,
-    PLUS,
-    DEC,
-    INC,
-    POSTDEC,
-    POSTINC,
-
-    ADD,
-    SUB,
-    MUL,
-    MOD,
-    DIV,
-
-    // safe arith
-    ADDS,
-    SUBS,
-    MULS,
-    MODS,
-    DIVS,
-
-    BNOT,
-    BAND,
-    BOR,
-    BXOR,
-    SHL,
-    SHR,
-
-    NOT,
-    LNOT,
-
-    EQ,
-    SEQ,
-    NEQ,
-    NSEQ,
-
-    LT,
-    GT,
-    LTEQ,
 }

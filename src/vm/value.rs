@@ -1,4 +1,4 @@
-use super::{VMClosure, gc::*};
+use super::{VMClosure, gc::*, VMState, VMClosureStatus};
 use std::{ptr::NonNull, collections::BTreeMap};
 use crate::binary::constant::Constant;
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -22,7 +22,7 @@ pub enum Value {
     GCValue(GCValue),
 }
 impl Value{
-    fn from(c: Constant, constant_pool_ptr:NonNull<BTreeMap<u16,Constant>>) -> Self {
+    pub fn from_constant(c: Constant, constant_pool_ptr:NonNull<BTreeMap<u16,Constant>>, state:&mut VMState) -> Self {
         match c {
             Constant::U8(v) => {Value::U8(v)}
             Constant::I8(v) => {Value::I8(v)}
@@ -35,11 +35,40 @@ impl Value{
             Constant::F32(v) => {Value::F32(v)}
             Constant::F64(v) => {Value::F64(v)}
 
-            // Constant::Function(v) => {}
-            // Constant::Map(v) => {}
-            // Constant::Vector(v) => {}
-            // Constant::String(v) => {}
-            // Constant::Opaque(v) => {}
+            Constant::Function(v) => {
+                let closure = VMClosure{
+                    function_bytecode: v.clone(),
+                    vargs: vec![],
+                    rets: vec![],
+                    registers: vec![Value::Undef;v.args_count as usize],
+                    pc: 0,
+                    status: VMClosureStatus::None,
+                    constant_pool_ptr: constant_pool_ptr,
+                };
+                let block = GCValue::Closure(state.gc.add_block(GCInnerValue::Closure(closure)));
+                Value::GCValue(block)
+            }
+            Constant::Map(v) => {
+                let nm:BTreeMap<String,Value> = v.iter().map(|(k,v)|{
+                    //TODO: mut引用问题
+                    (k.clone(),Value::from_constant(v.clone(),constant_pool_ptr,state))
+                }).collect();
+                let block = GCValue::Map(state.gc.add_block(GCInnerValue::Map(nm)));
+                Value::GCValue(block)
+            }
+            Constant::Vector(v) => {
+                let nv = v.iter().map(|f| Value::from_constant(f.clone(),constant_pool_ptr,state)).collect::<Vec<_>>();
+                let block = GCValue::Map(state.gc.add_block(GCInnerValue::Vector(nv)));
+                Value::GCValue(block)
+            }
+            Constant::String(v) => {
+                let ns = GCValue::String(state.gc.add_block(GCInnerValue::String(v.clone())));
+                Value::GCValue(ns)
+            }
+            Constant::Opaque(v) => {
+                let ns = GCValue::Opaque(state.gc.add_block(GCInnerValue::Opaque(v.clone())));
+                Value::GCValue(ns)
+            }
             _ => todo!()
         }
     }

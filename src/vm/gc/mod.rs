@@ -81,7 +81,7 @@ pub trait GC {
     // the runtime creates first gc( well only one gc i suppose )
     fn on_create(&mut self);
 
-    fn add_block(&mut self, data:GCInnerValue);
+    fn add_block(&mut self, data:GCInnerValue)->NonNull<dyn GCBlock>;
     // young generation
     fn trigger_on_close_function_call(&mut self);
     // old generation

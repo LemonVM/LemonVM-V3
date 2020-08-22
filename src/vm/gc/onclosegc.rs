@@ -91,7 +91,7 @@ impl GCBlock for OnCloseBlock{
 impl GC for OnCloseGC{
     fn on_create(&mut self) {
     }
-    fn add_block(&mut self, block:GCInnerValue) {
+    fn add_block(&mut self, block:GCInnerValue) -> NonNull<dyn GCBlock> {
         unsafe{
             self.pool.push(block);
             let b = NonNull::new_unchecked(self.pool.last_mut().unwrap());
@@ -100,6 +100,7 @@ impl GC for OnCloseGC{
                 d: b,
             };
             self.blocks.push(blc);
+            unsafe{NonNull::new_unchecked(self.blocks.last_mut().unwrap())}
         }
     }
     fn trigger_on_close_function_call(&mut self) {
