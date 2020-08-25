@@ -62,38 +62,26 @@ pub enum OpCode {
     ADD8,
     SUB8,
     MUL8,
-    MOD8,
+    REM8,
     DIV8,
 
     ADD16,
     SUB16,
     MUL16,
-    MOD16,
+    REM16,
     DIV16,
 
     ADD32,
     SUB32,
     MUL32,
-    MOD32,
+    REM32,
     DIV32,
 
     ADD64,
     SUB64,
     MUL64,
-    MOD64,
+    REM64,
     DIV64,
-
-    ADDF32,
-    SUBF32,
-    MULF32,
-    MODF32,
-    DIVF32,
-
-    ADDF64,
-    SUBF64,
-    MULF64,
-    MODF64,
-    DIVF64,
 
     // safe arith
     // check value that make sure is not overflow
@@ -102,31 +90,44 @@ pub enum OpCode {
     SADD8,
     SSUB8,
     SMUL8,
-    SMOD8,
+    SREM8,
     SDIV8,
 
     SADD16,
     SSUB16,
     SMUL16,
-    SMOD16,
+    SREM16,
     SDIV16,
 
     SADD32,
     SSUB32,
     SMUL32,
-    SMOD32,
+    SREM32,
     SDIV32,
 
     SADD64,
     SSUB64,
     SMUL64,
-    SMOD64,
+    SREM64,
     SDIV64,
+
+    // FLOATING ARITH
+    ADDF32,
+    SUBF32,
+    MULF32,
+    REMF32,
+    DIVF32,
+
+    ADDF64,
+    SUBF64,
+    MULF64,
+    REMF64,
+    DIVF64,
 
     BNOT,
     BAND,
-    BOR,
     BXOR,
+    BOR,
     SHL,
     SHR,
 
@@ -142,7 +143,13 @@ pub enum OpCode {
     GT,
     LTEQ,
 
+    // ===== TEMP CONTAINER =====
+    // container object managed by rust instead of managed by gc
+    // make dst a vec object, if already is , then push src to dst
+    // VEC dst src
+    VEC,
 
+    TOGC,
     // ===== FUNCTION? =====
     // make dst an args object, if already is , then add another arg
     // ARGS src dst

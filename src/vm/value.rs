@@ -1,6 +1,19 @@
 use super::{VMClosure, gc::*, VMState, VMClosureStatus};
 use std::{ptr::NonNull, collections::BTreeMap};
 use crate::binary::constant::Constant;
+
+use std::mem::ManuallyDrop;
+// direct reference from current function call state
+// after function call will be cleaned by rust
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum NSValue{
+    Closure(NonNull<ManuallyDrop<VMClosure>>),
+    String(NonNull<ManuallyDrop<String>>),
+    Opaque(NonNull<ManuallyDrop<Vec<u8>>>),
+    Vector(NonNull<ManuallyDrop<Vec<Value>>>),
+    Map(NonNull<ManuallyDrop<BTreeMap<String,Value>>>),
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Value {
     // on stack
@@ -18,6 +31,8 @@ pub enum Value {
     I64(i64),
     F32(f32),
     F64(f64),
+    // on heap but not escaped (managed by rust)
+    NSValue(NSValue),
     // on gc heap
     GCValue(GCValue),
 }

@@ -66,15 +66,6 @@ pub trait GCBlock {
     // !! if value is a reference type then it is not directly set
     // it will create a new gcblock and move the pointer to the new gcblock
     fn set_value(&mut self, v:Value) -> Value;
-
-    // // following methods only being used in built in container structure
-    // // value's lifetime follows the data structure
-    // fn add_value(&mut self, v:Value);
-    // // reference's lifetime follows all it's referee
-    // fn add_reference(&mut self, ref_: GCValue);
-    // // map
-    // fn insert(&mut self, k:String,v:Value);
-
 }
 
 pub trait GC {
@@ -82,11 +73,7 @@ pub trait GC {
     fn on_create(&mut self);
 
     fn add_block(&mut self, data:GCInnerValue)->NonNull<dyn GCBlock>;
-    // young generation
-    fn trigger_on_close_function_call(&mut self);
-    // old generation
     fn trigger_on_increse_size(&mut self);
-    // imm generation
     fn trigger_on_massive_increse_size(&mut self);
     // the runtime destroys it's gc
     // TODO: it hooks drop?

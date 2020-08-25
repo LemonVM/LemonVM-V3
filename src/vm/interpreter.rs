@@ -7,6 +7,7 @@ use crate::{
     config::*,
 };
 use std::{ptr::NonNull, collections::BTreeMap};
+use std::panic;
 
 macro_rules! expr {
     ($e:expr) => {
@@ -14,7 +15,40 @@ macro_rules! expr {
     }
 }
 macro_rules! TRI_INS_X {
-    ($regs:ident,$e1:ident,$e2:ident,$e3:ident,$t:ty,$t2:ty,$vc1:ident,$vc2:ident,$op:tt) => {
+    ($regs:ident,$e1:ident,$e2:ident,$e3:ident,$t:ident,$t2:ident,$vc1:ident,$op:tt) => {
+        let v1 = match $regs[$e1 as usize]{
+            Value::U8(v) => {v as $t},
+            Value::I8(v) => {v as $t},
+            Value::U16(v) => {v as $t},
+            Value::I16(v) => {v as $t},
+            Value::U32(v) => {v as $t},
+            Value::I32(v) => {v as $t},
+            Value::U64(v) => {v as $t},
+            Value::I64(v) => {v as $t},
+            Value::F32(v) => {v as $t},
+            Value::F64(v) => {v as $t},
+            _ => {panic!("ERROR! ARITH INSTRUCTION COULD ONLY APPLY TO NUMERICAL VALUES")}
+        };
+        let v2 = match $regs[$e2 as usize]{
+            Value::U8(v) => {v as $t},
+            Value::I8(v) => {v as $t},
+            Value::U16(v) => {v as $t},
+            Value::I16(v) => {v as $t},
+            Value::U32(v) => {v as $t},
+            Value::I32(v) => {v as $t},
+            Value::U64(v) => {v as $t},
+            Value::I64(v) => {v as $t},
+            Value::F32(v) => {v as $t},
+            Value::F64(v) => {v as $t},
+            _ => {panic!("ERROR! ARITH INSTRUCTION COULD ONLY APPLY TO NUMERICAL VALUES")}
+        };
+        unsafe {
+            $regs[$e3 as usize] = Value::$vc1(
+                expr!(v1 $op v2)
+            );
+        }
+    };
+    ($regs:ident,$e1:ident,$e2:ident,$e3:ident,$t:ident,$t2:ident,$vc1:ident,$vc2:ident,$op:ident) => {
         let mut sized = false;
         let v1 = match $regs[$e1 as usize]{
             Value::U8(v) => {v as $t},
@@ -27,7 +61,7 @@ macro_rules! TRI_INS_X {
             Value::I64(v) => {sized = true;v as $t},
             Value::F32(v) => {sized = true;v as $t},
             Value::F64(v) => {sized = true;v as $t},
-            _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
+            _ => {panic!("ERROR! ARITH INSTRUCTION COULD ONLY APPLY TO NUMERICAL VALUES")}
         };
         let v2 = match $regs[$e2 as usize]{
             Value::U8(v) => {v as $t},
@@ -40,12 +74,18 @@ macro_rules! TRI_INS_X {
             Value::I64(v) => {sized = true;v as $t},
             Value::F32(v) => {sized = true;v as $t},
             Value::F64(v) => {sized = true;v as $t},
-            _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
+            _ => {panic!("ERROR! ARITH INSTRUCTION COULD ONLY APPLY TO NUMERICAL VALUES")}
         };
-        if sized{
-            $regs[$e3 as usize] = Value::$vc1(expr!(v1 as $t2 $op v2 as $t2));
-        }else{
-            $regs[$e3 as usize] = Value::$vc2(expr!(v1 $op v2));
+        unsafe {
+            if sized{
+                $regs[$e3 as usize] = Value::$vc1(
+                    (v1 as $t2).$op(v2 as $t2)
+                );
+            }else{
+                $regs[$e3 as usize] = Value::$vc2(
+                    (v1).$op(v2)
+                );
+            }
         }
     };
 }
@@ -294,530 +334,530 @@ fn interpreter(state: &mut VMState) {
             
 
             _ if ins == OpCode::ADD8 as u16 => {
-                let mut sized = false;
-                let v1 = match stack_regs[e1 as usize]{
-                    Value::U8(v) => {v as u8},
-                    Value::I8(v) => {sized = true;v as u8},
-                    Value::U16(v) => {v as u8},
-                    Value::I16(v) => {sized = true;v as u8},
-                    Value::U32(v) => {v as u8},
-                    Value::I32(v) => {sized = true;v as u8},
-                    Value::U64(v) => {v as u8},
-                    Value::I64(v) => {sized = true;v as u8},
-                    Value::F32(v) => {sized = true;v as u8},
-                    Value::F64(v) => {sized = true;v as u8},
-                    _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
-                };
-                let v2 = match stack_regs[e2 as usize]{
-                    Value::U8(v) => {v as u8},
-                    Value::I8(v) => {sized = true;v as u8},
-                    Value::U16(v) => {v as u8},
-                    Value::I16(v) => {sized = true;v as u8},
-                    Value::U32(v) => {v as u8},
-                    Value::I32(v) => {sized = true;v as u8},
-                    Value::U64(v) => {v as u8},
-                    Value::I64(v) => {sized = true;v as u8},
-                    Value::F32(v) => {sized = true;v as u8},
-                    Value::F64(v) => {sized = true;v as u8},
-                    _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
-                };
-                if sized{
-                    stack_regs[e3 as usize] = Value::I8(v1 as i8 + v2 as i8);
-                }else{
-                    stack_regs[e3 as usize] = Value::U8(v1+v2);
-                }
+                TRI_INS_X!(stack_regs,e1,e2,e3,u8,i8,I8,U8,wrapping_add);
             }
             _ if ins == OpCode::ADD16 as u16 => {
-                TRI_INS_X!(stack_regs,e1,e2,e3,u16,i16,I16,U16,+);
+                TRI_INS_X!(stack_regs,e1,e2,e3,u16,i16,I16,U16,wrapping_add);
             }
             _ if ins == OpCode::ADD32 as u16 => {
-                TRI_INS_X!(stack_regs,e1,e2,e3,u32,i32,I32,U32,+);
+                TRI_INS_X!(stack_regs,e1,e2,e3,u32,i32,I32,U32,wrapping_add);
             }
             _ if ins == OpCode::ADD64 as u16 => {
-                let mut sized = false;
-                let v1 = match stack_regs[e1 as usize]{
-                    Value::U8(v) => {v as u64},
-                    Value::I8(v) => {sized = true;v as u64},
-                    Value::U16(v) => {v as u64},
-                    Value::I16(v) => {sized = true;v as u64},
-                    Value::U32(v) => {v as u64},
-                    Value::I32(v) => {sized = true;v as u64},
-                    Value::U64(v) => {v as u64},
-                    Value::I64(v) => {sized = true;v as u64},
-                    Value::F32(v) => {sized = true;v as u64},
-                    Value::F64(v) => {sized = true;v as u64},
-                    _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
-                };
-                let v2 = match stack_regs[e2 as usize]{
-                    Value::U8(v) => {v as u64},
-                    Value::I8(v) => {sized = true;v as u64},
-                    Value::U16(v) => {v as u64},
-                    Value::I16(v) => {sized = true;v as u64},
-                    Value::U32(v) => {v as u64},
-                    Value::I32(v) => {sized = true;v as u64},
-                    Value::U64(v) => {v as u64},
-                    Value::I64(v) => {sized = true;v as u64},
-                    Value::F32(v) => {sized = true;v as u64},
-                    Value::F64(v) => {sized = true;v as u64},
-                    _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
-                };
-                if sized{
-                    stack_regs[e3 as usize] = Value::I64(v1 as i64 + v2 as i64);
-                }else{
-                    stack_regs[e3 as usize] = Value::U64(v1+v2);
-                }
+                TRI_INS_X!(stack_regs,e1,e2,e3,u64,i64,I64,U64,wrapping_add);
             }
             _ if ins == OpCode::ADDF32 as u16 => {
-                let v1 = match stack_regs[e1 as usize]{
-                    Value::U8(v) => {v as f32},
-                    Value::I8(v) => {v as f32},
-                    Value::U16(v) => {v as f32},
-                    Value::I16(v) => {v as f32},
-                    Value::U32(v) => {v as f32},
-                    Value::I32(v) => {v as f32},
-                    Value::U64(v) => {v as f32},
-                    Value::I64(v) => {v as f32},
-                    Value::F32(v) => {v as f32},
-                    Value::F64(v) => {v as f32},
-                    _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
-                };
-                let v2 = match stack_regs[e2 as usize]{
-                    Value::U8(v) => {v as f32},
-                    Value::I8(v) => {v as f32},
-                    Value::U16(v) => {v as f32},
-                    Value::I16(v) => {v as f32},
-                    Value::U32(v) => {v as f32},
-                    Value::I32(v) => {v as f32},
-                    Value::U64(v) => {v as f32},
-                    Value::I64(v) => {v as f32},
-                    Value::F32(v) => {v as f32},
-                    Value::F64(v) => {v as f32},
-                    _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
-                };
-                stack_regs[e3 as usize] = Value::F32(v1+v2);
+                TRI_INS_X!(stack_regs,e1,e2,e3,f32,f32,F32,+);
             }
             _ if ins == OpCode::ADDF64 as u16 => {
-                let v1 = match stack_regs[e1 as usize]{
-                    Value::U8(v) => {v as f64},
-                    Value::I8(v) => {v as f64},
-                    Value::U16(v) => {v as f64},
-                    Value::I16(v) => {v as f64},
-                    Value::U32(v) => {v as f64},
-                    Value::I32(v) => {v as f64},
-                    Value::U64(v) => {v as f64},
-                    Value::I64(v) => {v as f64},
-                    Value::F32(v) => {v as f64},
-                    Value::F64(v) => {v as f64},
-                    _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
-                };
-                let v2 = match stack_regs[e2 as usize]{
-                    Value::U8(v) => {v as f64},
-                    Value::I8(v) => {v as f64},
-                    Value::U16(v) => {v as f64},
-                    Value::I16(v) => {v as f64},
-                    Value::U32(v) => {v as f64},
-                    Value::I32(v) => {v as f64},
-                    Value::U64(v) => {v as f64},
-                    Value::I64(v) => {v as f64},
-                    Value::F32(v) => {v as f64},
-                    Value::F64(v) => {v as f64},
-                    _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
-                };
-                stack_regs[e3 as usize] = Value::F64(v1+v2);
+                TRI_INS_X!(stack_regs,e1,e2,e3,f32,f32,F32,+);
             }
             
             _ if ins == OpCode::SUB8 as u16 => {
-                let mut sized = false;
-                let v1 = match stack_regs[e1 as usize]{
-                    Value::U8(v) => {v as u8},
-                    Value::I8(v) => {sized = true;v as u8},
-                    Value::U16(v) => {v as u8},
-                    Value::I16(v) => {sized = true;v as u8},
-                    Value::U32(v) => {v as u8},
-                    Value::I32(v) => {sized = true;v as u8},
-                    Value::U64(v) => {v as u8},
-                    Value::I64(v) => {sized = true;v as u8},
-                    Value::F32(v) => {sized = true;v as u8},
-                    Value::F64(v) => {sized = true;v as u8},
-                    _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
-                };
-                let v2 = match stack_regs[e2 as usize]{
-                    Value::U8(v) => {v as u8},
-                    Value::I8(v) => {sized = true;v as u8},
-                    Value::U16(v) => {v as u8},
-                    Value::I16(v) => {sized = true;v as u8},
-                    Value::U32(v) => {v as u8},
-                    Value::I32(v) => {sized = true;v as u8},
-                    Value::U64(v) => {v as u8},
-                    Value::I64(v) => {sized = true;v as u8},
-                    Value::F32(v) => {sized = true;v as u8},
-                    Value::F64(v) => {sized = true;v as u8},
-                    _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
-                };
-                if sized{
-                    stack_regs[e3 as usize] = Value::I8(v1 as i8 - v2 as i8);
-                }else{
-                    stack_regs[e3 as usize] = Value::U8(v1-v2);
-                }
+                TRI_INS_X!(stack_regs,e1,e2,e3,u8,i8,I8,U8,wrapping_sub);
             }
             _ if ins == OpCode::SUB16 as u16 => {
-                let mut sized = false;
-                let v1 = match stack_regs[e1 as usize]{
-                    Value::U8(v) => {v as u16},
-                    Value::I8(v) => {sized = true;v as u16},
-                    Value::U16(v) => {v as u16},
-                    Value::I16(v) => {sized = true;v as u16},
-                    Value::U32(v) => {v as u16},
-                    Value::I32(v) => {sized = true;v as u16},
-                    Value::U64(v) => {v as u16},
-                    Value::I64(v) => {sized = true;v as u16},
-                    Value::F32(v) => {sized = true;v as u16},
-                    Value::F64(v) => {sized = true;v as u16},
-                    _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
-                };
-                let v2 = match stack_regs[e2 as usize]{
-                    Value::U8(v) => {v as u16},
-                    Value::I8(v) => {sized = true;v as u16},
-                    Value::U16(v) => {v as u16},
-                    Value::I16(v) => {sized = true;v as u16},
-                    Value::U32(v) => {v as u16},
-                    Value::I32(v) => {sized = true;v as u16},
-                    Value::U64(v) => {v as u16},
-                    Value::I64(v) => {sized = true;v as u16},
-                    Value::F32(v) => {sized = true;v as u16},
-                    Value::F64(v) => {sized = true;v as u16},
-                    _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
-                };
-                if sized{
-                    stack_regs[e3 as usize] = Value::I16(v1 as i16 - v2 as i16);
-                }else{
-                    stack_regs[e3 as usize] = Value::U16(v1-v2);
-                }
+                TRI_INS_X!(stack_regs,e1,e2,e3,u16,i16,I16,U16,wrapping_sub);
             }
             _ if ins == OpCode::SUB32 as u16 => {
-                let mut sized = false;
-                let v1 = match stack_regs[e1 as usize]{
-                    Value::U8(v) => {v as u32},
-                    Value::I8(v) => {sized = true;v as u32},
-                    Value::U16(v) => {v as u32},
-                    Value::I16(v) => {sized = true;v as u32},
-                    Value::U32(v) => {v as u32},
-                    Value::I32(v) => {sized = true;v as u32},
-                    Value::U64(v) => {v as u32},
-                    Value::I64(v) => {sized = true;v as u32},
-                    Value::F32(v) => {sized = true;v as u32},
-                    Value::F64(v) => {sized = true;v as u32},
-                    _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
-                };
-                let v2 = match stack_regs[e2 as usize]{
-                    Value::U8(v) => {v as u32},
-                    Value::I8(v) => {sized = true;v as u32},
-                    Value::U16(v) => {v as u32},
-                    Value::I16(v) => {sized = true;v as u32},
-                    Value::U32(v) => {v as u32},
-                    Value::I32(v) => {sized = true;v as u32},
-                    Value::U64(v) => {v as u32},
-                    Value::I64(v) => {sized = true;v as u32},
-                    Value::F32(v) => {sized = true;v as u32},
-                    Value::F64(v) => {sized = true;v as u32},
-                    _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
-                };
-                if sized{
-                    stack_regs[e3 as usize] = Value::I32(v1 as i32 - v2 as i32);
-                }else{
-                    stack_regs[e3 as usize] = Value::U32(v1-v2);
-                }
+                TRI_INS_X!(stack_regs,e1,e2,e3,u32,i32,I32,U32,wrapping_sub);
             }
             _ if ins == OpCode::SUB64 as u16 => {
-                let mut sized = false;
-                let v1 = match stack_regs[e1 as usize]{
-                    Value::U8(v) => {v as u64},
-                    Value::I8(v) => {sized = true;v as u64},
-                    Value::U16(v) => {v as u64},
-                    Value::I16(v) => {sized = true;v as u64},
-                    Value::U32(v) => {v as u64},
-                    Value::I32(v) => {sized = true;v as u64},
-                    Value::U64(v) => {v as u64},
-                    Value::I64(v) => {sized = true;v as u64},
-                    Value::F32(v) => {sized = true;v as u64},
-                    Value::F64(v) => {sized = true;v as u64},
-                    _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
-                };
-                let v2 = match stack_regs[e2 as usize]{
-                    Value::U8(v) => {v as u64},
-                    Value::I8(v) => {sized = true;v as u64},
-                    Value::U16(v) => {v as u64},
-                    Value::I16(v) => {sized = true;v as u64},
-                    Value::U32(v) => {v as u64},
-                    Value::I32(v) => {sized = true;v as u64},
-                    Value::U64(v) => {v as u64},
-                    Value::I64(v) => {sized = true;v as u64},
-                    Value::F32(v) => {sized = true;v as u64},
-                    Value::F64(v) => {sized = true;v as u64},
-                    _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
-                };
-                if sized{
-                    stack_regs[e3 as usize] = Value::I64(v1 as i64 - v2 as i64);
-                }else{
-                    stack_regs[e3 as usize] = Value::U64(v1-v2);
-                }
+                TRI_INS_X!(stack_regs,e1,e2,e3,u64,i64,I64,U64,wrapping_sub);
             }
             _ if ins == OpCode::SUBF32 as u16 => {
-                let v1 = match stack_regs[e1 as usize]{
-                    Value::U8(v) => {v as f32},
-                    Value::I8(v) => {v as f32},
-                    Value::U16(v) => {v as f32},
-                    Value::I16(v) => {v as f32},
-                    Value::U32(v) => {v as f32},
-                    Value::I32(v) => {v as f32},
-                    Value::U64(v) => {v as f32},
-                    Value::I64(v) => {v as f32},
-                    Value::F32(v) => {v as f32},
-                    Value::F64(v) => {v as f32},
-                    _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
-                };
-                let v2 = match stack_regs[e2 as usize]{
-                    Value::U8(v) => {v as f32},
-                    Value::I8(v) => {v as f32},
-                    Value::U16(v) => {v as f32},
-                    Value::I16(v) => {v as f32},
-                    Value::U32(v) => {v as f32},
-                    Value::I32(v) => {v as f32},
-                    Value::U64(v) => {v as f32},
-                    Value::I64(v) => {v as f32},
-                    Value::F32(v) => {v as f32},
-                    Value::F64(v) => {v as f32},
-                    _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
-                };
-                stack_regs[e3 as usize] = Value::F32(v1-v2);
+                TRI_INS_X!(stack_regs,e1,e2,e3,f32,f32,F32,-);
             }
             _ if ins == OpCode::SUBF64 as u16 => {
-                let v1 = match stack_regs[e1 as usize]{
-                    Value::U8(v) => {v as f64},
-                    Value::I8(v) => {v as f64},
-                    Value::U16(v) => {v as f64},
-                    Value::I16(v) => {v as f64},
-                    Value::U32(v) => {v as f64},
-                    Value::I32(v) => {v as f64},
-                    Value::U64(v) => {v as f64},
-                    Value::I64(v) => {v as f64},
-                    Value::F32(v) => {v as f64},
-                    Value::F64(v) => {v as f64},
-                    _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
-                };
-                let v2 = match stack_regs[e2 as usize]{
-                    Value::U8(v) => {v as f64},
-                    Value::I8(v) => {v as f64},
-                    Value::U16(v) => {v as f64},
-                    Value::I16(v) => {v as f64},
-                    Value::U32(v) => {v as f64},
-                    Value::I32(v) => {v as f64},
-                    Value::U64(v) => {v as f64},
-                    Value::I64(v) => {v as f64},
-                    Value::F32(v) => {v as f64},
-                    Value::F64(v) => {v as f64},
-                    _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
-                };
-                stack_regs[e3 as usize] = Value::F64(v1-v2);
+                TRI_INS_X!(stack_regs,e1,e2,e3,f32,f32,F32,-);
             }
             
             _ if ins == OpCode::MUL8 as u16 => {
-                let mut sized = false;
-                let v1 = match stack_regs[e1 as usize]{
-                    Value::U8(v) => {v as u8},
-                    Value::I8(v) => {sized = true;v as u8},
-                    Value::U16(v) => {v as u8},
-                    Value::I16(v) => {sized = true;v as u8},
-                    Value::U32(v) => {v as u8},
-                    Value::I32(v) => {sized = true;v as u8},
-                    Value::U64(v) => {v as u8},
-                    Value::I64(v) => {sized = true;v as u8},
-                    Value::F32(v) => {sized = true;v as u8},
-                    Value::F64(v) => {sized = true;v as u8},
-                    _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
-                };
-                let v2 = match stack_regs[e2 as usize]{
-                    Value::U8(v) => {v as u8},
-                    Value::I8(v) => {sized = true;v as u8},
-                    Value::U16(v) => {v as u8},
-                    Value::I16(v) => {sized = true;v as u8},
-                    Value::U32(v) => {v as u8},
-                    Value::I32(v) => {sized = true;v as u8},
-                    Value::U64(v) => {v as u8},
-                    Value::I64(v) => {sized = true;v as u8},
-                    Value::F32(v) => {sized = true;v as u8},
-                    Value::F64(v) => {sized = true;v as u8},
-                    _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
-                };
-                if sized{
-                    stack_regs[e3 as usize] = Value::I8(v1 as i8 + v2 as i8);
-                }else{
-                    stack_regs[e3 as usize] = Value::U8(v1+v2);
-                }
+                TRI_INS_X!(stack_regs,e1,e2,e3,u8,i8,I8,U8,wrapping_mul);
             }
             _ if ins == OpCode::MUL16 as u16 => {
-                let mut sized = false;
-                let v1 = match stack_regs[e1 as usize]{
-                    Value::U8(v) => {v as u16},
-                    Value::I8(v) => {sized = true;v as u16},
-                    Value::U16(v) => {v as u16},
-                    Value::I16(v) => {sized = true;v as u16},
-                    Value::U32(v) => {v as u16},
-                    Value::I32(v) => {sized = true;v as u16},
-                    Value::U64(v) => {v as u16},
-                    Value::I64(v) => {sized = true;v as u16},
-                    Value::F32(v) => {sized = true;v as u16},
-                    Value::F64(v) => {sized = true;v as u16},
-                    _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
-                };
-                let v2 = match stack_regs[e2 as usize]{
-                    Value::U8(v) => {v as u16},
-                    Value::I8(v) => {sized = true;v as u16},
-                    Value::U16(v) => {v as u16},
-                    Value::I16(v) => {sized = true;v as u16},
-                    Value::U32(v) => {v as u16},
-                    Value::I32(v) => {sized = true;v as u16},
-                    Value::U64(v) => {v as u16},
-                    Value::I64(v) => {sized = true;v as u16},
-                    Value::F32(v) => {sized = true;v as u16},
-                    Value::F64(v) => {sized = true;v as u16},
-                    _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
-                };
-                if sized{
-                    stack_regs[e3 as usize] = Value::I16(v1 as i16 + v2 as i16);
-                }else{
-                    stack_regs[e3 as usize] = Value::U16(v1+v2);
-                }
+                TRI_INS_X!(stack_regs,e1,e2,e3,u16,i16,I16,U16,wrapping_mul);
             }
             _ if ins == OpCode::MUL32 as u16 => {
-                let mut sized = false;
-                let v1 = match stack_regs[e1 as usize]{
-                    Value::U8(v) => {v as u32},
-                    Value::I8(v) => {sized = true;v as u32},
-                    Value::U16(v) => {v as u32},
-                    Value::I16(v) => {sized = true;v as u32},
-                    Value::U32(v) => {v as u32},
-                    Value::I32(v) => {sized = true;v as u32},
-                    Value::U64(v) => {v as u32},
-                    Value::I64(v) => {sized = true;v as u32},
-                    Value::F32(v) => {sized = true;v as u32},
-                    Value::F64(v) => {sized = true;v as u32},
-                    _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
-                };
-                let v2 = match stack_regs[e2 as usize]{
-                    Value::U8(v) => {v as u32},
-                    Value::I8(v) => {sized = true;v as u32},
-                    Value::U16(v) => {v as u32},
-                    Value::I16(v) => {sized = true;v as u32},
-                    Value::U32(v) => {v as u32},
-                    Value::I32(v) => {sized = true;v as u32},
-                    Value::U64(v) => {v as u32},
-                    Value::I64(v) => {sized = true;v as u32},
-                    Value::F32(v) => {sized = true;v as u32},
-                    Value::F64(v) => {sized = true;v as u32},
-                    _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
-                };
-                if sized{
-                    stack_regs[e3 as usize] = Value::I32(v1 as i32 + v2 as i32);
-                }else{
-                    stack_regs[e3 as usize] = Value::U32(v1+v2);
-                }
+                TRI_INS_X!(stack_regs,e1,e2,e3,u32,i32,I32,U32,wrapping_mul);
             }
             _ if ins == OpCode::MUL64 as u16 => {
-                let mut sized = false;
-                let v1 = match stack_regs[e1 as usize]{
-                    Value::U8(v) => {v as u64},
-                    Value::I8(v) => {sized = true;v as u64},
-                    Value::U16(v) => {v as u64},
-                    Value::I16(v) => {sized = true;v as u64},
-                    Value::U32(v) => {v as u64},
-                    Value::I32(v) => {sized = true;v as u64},
-                    Value::U64(v) => {v as u64},
-                    Value::I64(v) => {sized = true;v as u64},
-                    Value::F32(v) => {sized = true;v as u64},
-                    Value::F64(v) => {sized = true;v as u64},
-                    _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
-                };
-                let v2 = match stack_regs[e2 as usize]{
-                    Value::U8(v) => {v as u64},
-                    Value::I8(v) => {sized = true;v as u64},
-                    Value::U16(v) => {v as u64},
-                    Value::I16(v) => {sized = true;v as u64},
-                    Value::U32(v) => {v as u64},
-                    Value::I32(v) => {sized = true;v as u64},
-                    Value::U64(v) => {v as u64},
-                    Value::I64(v) => {sized = true;v as u64},
-                    Value::F32(v) => {sized = true;v as u64},
-                    Value::F64(v) => {sized = true;v as u64},
-                    _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
-                };
-                if sized{
-                    stack_regs[e3 as usize] = Value::I64(v1 as i64 + v2 as i64);
-                }else{
-                    stack_regs[e3 as usize] = Value::U64(v1+v2);
-                }
+                TRI_INS_X!(stack_regs,e1,e2,e3,u64,i64,I64,U64,wrapping_mul);
             }
             _ if ins == OpCode::MULF32 as u16 => {
-                let v1 = match stack_regs[e1 as usize]{
-                    Value::U8(v) => {v as f32},
-                    Value::I8(v) => {v as f32},
-                    Value::U16(v) => {v as f32},
-                    Value::I16(v) => {v as f32},
-                    Value::U32(v) => {v as f32},
-                    Value::I32(v) => {v as f32},
-                    Value::U64(v) => {v as f32},
-                    Value::I64(v) => {v as f32},
-                    Value::F32(v) => {v as f32},
-                    Value::F64(v) => {v as f32},
-                    _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
-                };
-                let v2 = match stack_regs[e2 as usize]{
-                    Value::U8(v) => {v as f32},
-                    Value::I8(v) => {v as f32},
-                    Value::U16(v) => {v as f32},
-                    Value::I16(v) => {v as f32},
-                    Value::U32(v) => {v as f32},
-                    Value::I32(v) => {v as f32},
-                    Value::U64(v) => {v as f32},
-                    Value::I64(v) => {v as f32},
-                    Value::F32(v) => {v as f32},
-                    Value::F64(v) => {v as f32},
-                    _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
-                };
-                stack_regs[e3 as usize] = Value::F32(v1+v2);
+                TRI_INS_X!(stack_regs,e1,e2,e3,f32,f32,F32,*);
             }
             _ if ins == OpCode::MULF64 as u16 => {
-                let v1 = match stack_regs[e1 as usize]{
-                    Value::U8(v) => {v as f64},
-                    Value::I8(v) => {v as f64},
-                    Value::U16(v) => {v as f64},
-                    Value::I16(v) => {v as f64},
-                    Value::U32(v) => {v as f64},
-                    Value::I32(v) => {v as f64},
-                    Value::U64(v) => {v as f64},
-                    Value::I64(v) => {v as f64},
-                    Value::F32(v) => {v as f64},
-                    Value::F64(v) => {v as f64},
-                    _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
-                };
-                let v2 = match stack_regs[e2 as usize]{
-                    Value::U8(v) => {v as f64},
-                    Value::I8(v) => {v as f64},
-                    Value::U16(v) => {v as f64},
-                    Value::I16(v) => {v as f64},
-                    Value::U32(v) => {v as f64},
-                    Value::I32(v) => {v as f64},
-                    Value::U64(v) => {v as f64},
-                    Value::I64(v) => {v as f64},
-                    Value::F32(v) => {v as f64},
-                    Value::F64(v) => {v as f64},
-                    _ => {panic!("ERROR! ADD8 COULD ONLY APPLY TO NUMERICAL VALUES")}
-                };
-                stack_regs[e3 as usize] = Value::F64(v1+v2);
+                TRI_INS_X!(stack_regs,e1,e2,e3,f32,f32,F32,*);
             }
             
+            _ if ins == OpCode::DIV8 as u16 => {
+                TRI_INS_X!(stack_regs,e1,e2,e3,u8,i8,I8,U8,wrapping_div);
+            }
+            _ if ins == OpCode::DIV16 as u16 => {
+                TRI_INS_X!(stack_regs,e1,e2,e3,u16,i16,I16,U16,wrapping_div);
+            }
+            _ if ins == OpCode::DIV32 as u16 => {
+                TRI_INS_X!(stack_regs,e1,e2,e3,u32,i32,I32,U32,wrapping_div);
+            }
+            _ if ins == OpCode::DIV64 as u16 => {
+                TRI_INS_X!(stack_regs,e1,e2,e3,u64,i64,I64,U64,wrapping_div);
+            }
+            _ if ins == OpCode::DIVF32 as u16 => {
+                TRI_INS_X!(stack_regs,e1,e2,e3,f32,f32,F32,/);
+            }
+            _ if ins == OpCode::DIVF64 as u16 => {
+                TRI_INS_X!(stack_regs,e1,e2,e3,f32,f32,F32,/);
+            }
+            
+            _ if ins == OpCode::REM8 as u16 => {
+                TRI_INS_X!(stack_regs,e1,e2,e3,u8,i8,I8,U8,wrapping_rem);
+            }
+            _ if ins == OpCode::REM16 as u16 => {
+                TRI_INS_X!(stack_regs,e1,e2,e3,u16,i16,I16,U16,wrapping_rem);
+            }
+            _ if ins == OpCode::REM32 as u16 => {
+                TRI_INS_X!(stack_regs,e1,e2,e3,u32,i32,I32,U32,wrapping_rem);
+            }
+            _ if ins == OpCode::REM64 as u16 => {
+                TRI_INS_X!(stack_regs,e1,e2,e3,u64,i64,I64,U64,wrapping_rem);
+            }
+            _ if ins == OpCode::REMF32 as u16 => {
+                TRI_INS_X!(stack_regs,e1,e2,e3,f32,f32,F32,%);
+            }
+            _ if ins == OpCode::REMF64 as u16 => {
+                TRI_INS_X!(stack_regs,e1,e2,e3,f32,f32,F32,%);
+            }
+            
+            _ if ins == OpCode::SADD8 as u16 => {
+                let mut sized = false;
+                let v1 = match stack_regs[e1 as usize]{
+                    Value::U8(v) => {v as u8},
+                    Value::I8(v) => {sized = true;v as u8},
+                    Value::U16(v) => {v as u8},
+                    Value::I16(v) => {sized = true;v as u8},
+                    Value::U32(v) => {v as u8},
+                    Value::I32(v) => {sized = true;v as u8},
+                    Value::U64(v) => {v as u8},
+                    Value::I64(v) => {sized = true;v as u8},
+                    Value::F32(v) => {sized = true;v as u8},
+                    Value::F64(v) => {sized = true;v as u8},
+                    _ => {panic!("ERROR! ARITH INSTRUCTION COULD ONLY APPLY TO NUMERICAL VALUES")}
+                };
+                let v2 = match stack_regs[e2 as usize]{
+                    Value::U8(v) => {v as u8},
+                    Value::I8(v) => {sized = true;v as u8},
+                    Value::U16(v) => {v as u8},
+                    Value::I16(v) => {sized = true;v as u8},
+                    Value::U32(v) => {v as u8},
+                    Value::I32(v) => {sized = true;v as u8},
+                    Value::U64(v) => {v as u8},
+                    Value::I64(v) => {sized = true;v as u8},
+                    Value::F32(v) => {sized = true;v as u8},
+                    Value::F64(v) => {sized = true;v as u8},
+                    _ => {panic!("ERROR! ARITH INSTRUCTION COULD ONLY APPLY TO NUMERICAL VALUES")}
+                };
+                if sized{
+                    match (v1 as i8).checked_add(v2 as i8){
+                        Some(v) => {
+                            stack_regs[e3 as usize] = Value::I8(v);
+                        },
+                        None => {
+                            panic!("ERROR! ARITH OVERFLOW")
+                        }
+                    }
+                }else{
+                    match v1.checked_add(v2){
+                        Some(v) => {
+                            stack_regs[e3 as usize] = Value::U8(v);
+                        },
+                        None => {
+                            panic!("ERROR! ARITH OVERFLOW")
+                        }
+                    }
+                }
+            }
 
+            _ if ins == OpCode::BNOT as u16 => {
+                match stack_regs[e1 as usize]{
+                    Value::U8(v) => {stack_regs[e2 as usize] = Value::U8(!v)},
+                    Value::I8(v) => {stack_regs[e2 as usize] = Value::I8(!v)},
+                    Value::U16(v) => {stack_regs[e2 as usize] = Value::U16(!v)},
+                    Value::I16(v) => {stack_regs[e2 as usize] = Value::I16(!v)},
+                    Value::U32(v) => {stack_regs[e2 as usize] = Value::U32(!v)},
+                    Value::I32(v) => {stack_regs[e2 as usize] = Value::I32(!v)},
+                    Value::U64(v) => {stack_regs[e2 as usize] = Value::U64(!v)},
+                    Value::I64(v) => {stack_regs[e2 as usize] = Value::I64(!v)},
+                    Value::F32(v) => {stack_regs[e2 as usize] = Value::I32(!(v as i32))},
+                    Value::F64(v) => {stack_regs[e2 as usize] = Value::I64(!(v as i64))},
+                    _ => {}
+                }
+            },
+            _ if ins == OpCode::BAND as u16 => {
+                let mut sized = false;
+                let mut max:u8  = 0b0000;
+                let v1 = match stack_regs[e1 as usize]{
+                    Value::U8(v) => {max |= 0b0001;v as u64},
+                    Value::I8(v) => {max |= 0b0001;sized = true;v as u64},
+                    Value::U16(v) => {max |= 0b0010;v as u64},
+                    Value::I16(v) => {max |= 0b0010;sized = true;v as u64},
+                    Value::U32(v) => {max |= 0b0100;v as u64},
+                    Value::I32(v) => {max |= 0b0100;sized = true;v as u64},
+                    Value::U64(v) => {max |= 0b1000;v as u64},
+                    Value::I64(v) => {max |= 0b1000;sized = true;v as u64},
+                    Value::F32(v) => {max |= 0b1000;sized = true;v as u64},
+                    Value::F64(v) => {max |= 0b1000;sized = true;v as u64},
+                    _ => {panic!("ERROR! ARITH INSTRUCTION COULD ONLY APPLY TO NUMERICAL VALUES")}
+                };
+                let v2 = match stack_regs[e2 as usize]{
+                    Value::U8(v) => {max |= 0b0001;v as u64},
+                    Value::I8(v) => {max |= 0b0001;sized = true;v as u64},
+                    Value::U16(v) => {max |= 0b0010;v as u64},
+                    Value::I16(v) => {max |= 0b0010;sized = true;v as u64},
+                    Value::U32(v) => {max |= 0b0100;v as u64},
+                    Value::I32(v) => {max |= 0b0100;sized = true;v as u64},
+                    Value::U64(v) => {max |= 0b1000;v as u64},
+                    Value::I64(v) => {max |= 0b1000;sized = true;v as u64},
+                    Value::F32(v) => {max |= 0b1000;sized = true;v as u64},
+                    Value::F64(v) => {max |= 0b1000;sized = true;v as u64},
+                    _ => {panic!("ERROR! ARITH INSTRUCTION COULD ONLY APPLY TO NUMERICAL VALUES")}
+                };
+                if max & 0b1000 == 0b1000{
+                    if sized{
+                        stack_regs[e3 as usize] = Value::I64(
+                            v1 as i64 & v2 as i64
+                        );
+                    }else{
+                        stack_regs[e3 as usize] = Value::U64(
+                            v1 as u64 & v2 as u64
+                        );
+                    }
+                } else if max & 0b0100 == 0b0100{
+                    if sized{
+                        stack_regs[e3 as usize] = Value::I32(
+                            v1 as i32 & v2 as i32
+                        );
+                    }else{
+                        stack_regs[e3 as usize] = Value::U32(
+                            v1 as u32 & v2 as u32
+                        );
+                    }
+                } else if max & 0b0010 == 0b0010{
+                    if sized{
+                        stack_regs[e3 as usize] = Value::I16(
+                            v1 as i16 & v2 as i16
+                        );
+                    }else{
+                        stack_regs[e3 as usize] = Value::U16(
+                            v1 as u16 & v2 as u16
+                        );
+                    }
+                } else if max & 0b0001 == 0b0001{
+                    if sized{
+                        stack_regs[e3 as usize] = Value::I8(
+                            v1 as i8 & v2 as i8
+                        );
+                    }else{
+                        stack_regs[e3 as usize] = Value::U8(
+                            v1 as u8 & v2 as u8
+                        );
+                    }
+                }else{
+                    panic!("卧槽? 咋了?!");
+                }
+            },
+            _ if ins == OpCode::BXOR as u16 => {
+                let mut sized = false;
+                let mut max:u8  = 0b0000;
+                let v1 = match stack_regs[e1 as usize]{
+                    Value::U8(v) => {max |= 0b0001;v as u64},
+                    Value::I8(v) => {max |= 0b0001;sized = true;v as u64},
+                    Value::U16(v) => {max |= 0b0010;v as u64},
+                    Value::I16(v) => {max |= 0b0010;sized = true;v as u64},
+                    Value::U32(v) => {max |= 0b0100;v as u64},
+                    Value::I32(v) => {max |= 0b0100;sized = true;v as u64},
+                    Value::U64(v) => {max |= 0b1000;v as u64},
+                    Value::I64(v) => {max |= 0b1000;sized = true;v as u64},
+                    Value::F32(v) => {max |= 0b1000;sized = true;v as u64},
+                    Value::F64(v) => {max |= 0b1000;sized = true;v as u64},
+                    _ => {panic!("ERROR! ARITH INSTRUCTION COULD ONLY APPLY TO NUMERICAL VALUES")}
+                };
+                let v2 = match stack_regs[e2 as usize]{
+                    Value::U8(v) => {max |= 0b0001;v as u64},
+                    Value::I8(v) => {max |= 0b0001;sized = true;v as u64},
+                    Value::U16(v) => {max |= 0b0010;v as u64},
+                    Value::I16(v) => {max |= 0b0010;sized = true;v as u64},
+                    Value::U32(v) => {max |= 0b0100;v as u64},
+                    Value::I32(v) => {max |= 0b0100;sized = true;v as u64},
+                    Value::U64(v) => {max |= 0b1000;v as u64},
+                    Value::I64(v) => {max |= 0b1000;sized = true;v as u64},
+                    Value::F32(v) => {max |= 0b1000;sized = true;v as u64},
+                    Value::F64(v) => {max |= 0b1000;sized = true;v as u64},
+                    _ => {panic!("ERROR! ARITH INSTRUCTION COULD ONLY APPLY TO NUMERICAL VALUES")}
+                };
+                if max & 0b1000 == 0b1000{
+                    if sized{
+                        stack_regs[e3 as usize] = Value::I64(
+                            v1 as i64 ^ v2 as i64
+                        );
+                    }else{
+                        stack_regs[e3 as usize] = Value::U64(
+                            v1 as u64 ^ v2 as u64
+                        );
+                    }
+                } else if max & 0b0100 == 0b0100{
+                    if sized{
+                        stack_regs[e3 as usize] = Value::I32(
+                            v1 as i32 ^ v2 as i32
+                        );
+                    }else{
+                        stack_regs[e3 as usize] = Value::U32(
+                            v1 as u32 ^ v2 as u32
+                        );
+                    }
+                } else if max & 0b0010 == 0b0010{
+                    if sized{
+                        stack_regs[e3 as usize] = Value::I16(
+                            v1 as i16 ^ v2 as i16
+                        );
+                    }else{
+                        stack_regs[e3 as usize] = Value::U16(
+                            v1 as u16 ^ v2 as u16
+                        );
+                    }
+                } else if max & 0b0001 == 0b0001{
+                    if sized{
+                        stack_regs[e3 as usize] = Value::I8(
+                            v1 as i8 ^ v2 as i8
+                        );
+                    }else{
+                        stack_regs[e3 as usize] = Value::U8(
+                            v1 as u8 ^ v2 as u8
+                        );
+                    }
+                }else{
+                    panic!("卧槽? 咋了?!");
+                }
+            },
+            _ if ins == OpCode::BOR as u16 => {
+                let mut sized = false;
+                let mut max:u8  = 0b0000;
+                let v1 = match stack_regs[e1 as usize]{
+                    Value::U8(v) => {max |= 0b0001;v as u64},
+                    Value::I8(v) => {max |= 0b0001;sized = true;v as u64},
+                    Value::U16(v) => {max |= 0b0010;v as u64},
+                    Value::I16(v) => {max |= 0b0010;sized = true;v as u64},
+                    Value::U32(v) => {max |= 0b0100;v as u64},
+                    Value::I32(v) => {max |= 0b0100;sized = true;v as u64},
+                    Value::U64(v) => {max |= 0b1000;v as u64},
+                    Value::I64(v) => {max |= 0b1000;sized = true;v as u64},
+                    Value::F32(v) => {max |= 0b1000;sized = true;v as u64},
+                    Value::F64(v) => {max |= 0b1000;sized = true;v as u64},
+                    _ => {panic!("ERROR! ARITH INSTRUCTION COULD ONLY APPLY TO NUMERICAL VALUES")}
+                };
+                let v2 = match stack_regs[e2 as usize]{
+                    Value::U8(v) => {max |= 0b0001;v as u64},
+                    Value::I8(v) => {max |= 0b0001;sized = true;v as u64},
+                    Value::U16(v) => {max |= 0b0010;v as u64},
+                    Value::I16(v) => {max |= 0b0010;sized = true;v as u64},
+                    Value::U32(v) => {max |= 0b0100;v as u64},
+                    Value::I32(v) => {max |= 0b0100;sized = true;v as u64},
+                    Value::U64(v) => {max |= 0b1000;v as u64},
+                    Value::I64(v) => {max |= 0b1000;sized = true;v as u64},
+                    Value::F32(v) => {max |= 0b1000;sized = true;v as u64},
+                    Value::F64(v) => {max |= 0b1000;sized = true;v as u64},
+                    _ => {panic!("ERROR! ARITH INSTRUCTION COULD ONLY APPLY TO NUMERICAL VALUES")}
+                };
+                if max & 0b1000 == 0b1000{
+                    if sized{
+                        stack_regs[e3 as usize] = Value::I64(
+                            v1 as i64 | v2 as i64
+                        );
+                    }else{
+                        stack_regs[e3 as usize] = Value::U64(
+                            v1 as u64 | v2 as u64
+                        );
+                    }
+                } else if max & 0b0100 == 0b0100{
+                    if sized{
+                        stack_regs[e3 as usize] = Value::I32(
+                            v1 as i32 | v2 as i32
+                        );
+                    }else{
+                        stack_regs[e3 as usize] = Value::U32(
+                            v1 as u32 | v2 as u32
+                        );
+                    }
+                } else if max & 0b0010 == 0b0010{
+                    if sized{
+                        stack_regs[e3 as usize] = Value::I16(
+                            v1 as i16 | v2 as i16
+                        );
+                    }else{
+                        stack_regs[e3 as usize] = Value::U16(
+                            v1 as u16 | v2 as u16
+                        );
+                    }
+                } else if max & 0b0001 == 0b0001{
+                    if sized{
+                        stack_regs[e3 as usize] = Value::I8(
+                            v1 as i8 | v2 as i8
+                        );
+                    }else{
+                        stack_regs[e3 as usize] = Value::U8(
+                            v1 as u8 | v2 as u8
+                        );
+                    }
+                }else{
+                    panic!("卧槽? 咋了?!");
+                }
+            },
 
+            _ if ins == OpCode::SHL as u16 => {
+                let mut sized = false;
+                let mut max:u8  = 0b0000;
+                let v1 = match stack_regs[e1 as usize]{
+                    Value::U8(v) => {max |= 0b0001;v as u64},
+                    Value::I8(v) => {max |= 0b0001;sized = true;v as u64},
+                    Value::U16(v) => {max |= 0b0010;v as u64},
+                    Value::I16(v) => {max |= 0b0010;sized = true;v as u64},
+                    Value::U32(v) => {max |= 0b0100;v as u64},
+                    Value::I32(v) => {max |= 0b0100;sized = true;v as u64},
+                    Value::U64(v) => {max |= 0b1000;v as u64},
+                    Value::I64(v) => {max |= 0b1000;sized = true;v as u64},
+                    Value::F32(v) => {max |= 0b1000;sized = true;v as u64},
+                    Value::F64(v) => {max |= 0b1000;sized = true;v as u64},
+                    _ => {panic!("ERROR! ARITH INSTRUCTION COULD ONLY APPLY TO NUMERICAL VALUES")}
+                };
+                let v2 = match stack_regs[e2 as usize]{
+                    Value::U8(v) => {max |= 0b0001;v as u64},
+                    Value::I8(v) => {max |= 0b0001;sized = true;v as u64},
+                    Value::U16(v) => {max |= 0b0010;v as u64},
+                    Value::I16(v) => {max |= 0b0010;sized = true;v as u64},
+                    Value::U32(v) => {max |= 0b0100;v as u64},
+                    Value::I32(v) => {max |= 0b0100;sized = true;v as u64},
+                    Value::U64(v) => {max |= 0b1000;v as u64},
+                    Value::I64(v) => {max |= 0b1000;sized = true;v as u64},
+                    Value::F32(v) => {max |= 0b1000;sized = true;v as u64},
+                    Value::F64(v) => {max |= 0b1000;sized = true;v as u64},
+                    _ => {panic!("ERROR! ARITH INSTRUCTION COULD ONLY APPLY TO NUMERICAL VALUES")}
+                };
+                if max & 0b1000 == 0b1000{
+                    if sized{
+                        stack_regs[e3 as usize] = Value::I64(
+                            (v1 as i64) << v2 as i64
+                        );
+                    }else{
+                        stack_regs[e3 as usize] = Value::U64(
+                            (v1 as u64) << v2 as u64
+                        );
+                    }
+                } else if max & 0b0100 == 0b0100{
+                    if sized{
+                        stack_regs[e3 as usize] = Value::I32(
+                            (v1 as i32) << v2 as i32
+                        );
+                    }else{
+                        stack_regs[e3 as usize] = Value::U32(
+                            (v1 as u32) << v2 as u32
+                        );
+                    }
+                } else if max & 0b0010 == 0b0010{
+                    if sized{
+                        stack_regs[e3 as usize] = Value::I16(
+                            (v1 as i16) << v2 as i16
+                        );
+                    }else{
+                        stack_regs[e3 as usize] = Value::U16(
+                            (v1 as u16) << v2 as u16
+                        );
+                    }
+                } else if max & 0b0001 == 0b0001{
+                    if sized{
+                        stack_regs[e3 as usize] = Value::I8(
+                            (v1 as i8) << v2 as i8
+                        );
+                    }else{
+                        stack_regs[e3 as usize] = Value::U8(
+                            (v1 as u8) << v2 as u8
+                        );
+                    }
+                }else{
+                    panic!("卧槽? 咋了?!");
+                }
+            },
+            _ if ins == OpCode::SHR as u16 => {
+                let mut sized = false;
+                let mut max:u8  = 0b0000;
+                let v1 = match stack_regs[e1 as usize]{
+                    Value::U8(v) => {max |= 0b0001;v as u64},
+                    Value::I8(v) => {max |= 0b0001;sized = true;v as u64},
+                    Value::U16(v) => {max |= 0b0010;v as u64},
+                    Value::I16(v) => {max |= 0b0010;sized = true;v as u64},
+                    Value::U32(v) => {max |= 0b0100;v as u64},
+                    Value::I32(v) => {max |= 0b0100;sized = true;v as u64},
+                    Value::U64(v) => {max |= 0b1000;v as u64},
+                    Value::I64(v) => {max |= 0b1000;sized = true;v as u64},
+                    Value::F32(v) => {max |= 0b1000;sized = true;v as u64},
+                    Value::F64(v) => {max |= 0b1000;sized = true;v as u64},
+                    _ => {panic!("ERROR! ARITH INSTRUCTION COULD ONLY APPLY TO NUMERICAL VALUES")}
+                };
+                let v2 = match stack_regs[e2 as usize]{
+                    Value::U8(v) => {max |= 0b0001;v as u64},
+                    Value::I8(v) => {max |= 0b0001;sized = true;v as u64},
+                    Value::U16(v) => {max |= 0b0010;v as u64},
+                    Value::I16(v) => {max |= 0b0010;sized = true;v as u64},
+                    Value::U32(v) => {max |= 0b0100;v as u64},
+                    Value::I32(v) => {max |= 0b0100;sized = true;v as u64},
+                    Value::U64(v) => {max |= 0b1000;v as u64},
+                    Value::I64(v) => {max |= 0b1000;sized = true;v as u64},
+                    Value::F32(v) => {max |= 0b1000;sized = true;v as u64},
+                    Value::F64(v) => {max |= 0b1000;sized = true;v as u64},
+                    _ => {panic!("ERROR! ARITH INSTRUCTION COULD ONLY APPLY TO NUMERICAL VALUES")}
+                };
+                if max & 0b1000 == 0b1000{
+                    if sized{
+                        stack_regs[e3 as usize] = Value::I64(
+                            (v1 as i64) >> v2 as i64
+                        );
+                    }else{
+                        stack_regs[e3 as usize] = Value::U64(
+                            (v1 as u64) >> v2 as u64
+                        );
+                    }
+                } else if max & 0b0100 == 0b0100{
+                    if sized{
+                        stack_regs[e3 as usize] = Value::I32(
+                            (v1 as i32) >> v2 as i32
+                        );
+                    }else{
+                        stack_regs[e3 as usize] = Value::U32(
+                            (v1 as u32) >> v2 as u32
+                        );
+                    }
+                } else if max & 0b0010 == 0b0010{
+                    if sized{
+                        stack_regs[e3 as usize] = Value::I16(
+                            (v1 as i16) >> v2 as i16
+                        );
+                    }else{
+                        stack_regs[e3 as usize] = Value::U16(
+                            (v1 as u16) >> v2 as u16
+                        );
+                    }
+                } else if max & 0b0001 == 0b0001{
+                    if sized{
+                        stack_regs[e3 as usize] = Value::I8(
+                            (v1 as i8) >> v2 as i8
+                        );
+                    }else{
+                        stack_regs[e3 as usize] = Value::U8(
+                            (v1 as u8) >> v2 as u8
+                        );
+                    }
+                }else{
+                    panic!("卧槽? 咋了?!");
+                }
+            },
             _ => unimplemented!(),
         }
 

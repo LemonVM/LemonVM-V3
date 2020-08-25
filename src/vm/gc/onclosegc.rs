@@ -103,8 +103,6 @@ impl GC for OnCloseGC{
             unsafe{NonNull::new_unchecked(self.blocks.last_mut().unwrap())}
         }
     }
-    fn trigger_on_close_function_call(&mut self) {
-    }
     fn trigger_on_increse_size(&mut self) {
     }
     fn trigger_on_massive_increse_size(&mut self) {
