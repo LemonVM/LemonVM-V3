@@ -13,16 +13,16 @@ pub struct Writer {
 pub trait BinaryRW {
     fn read(reader: &mut Reader) -> Self;
     fn write(&self, writer: &mut Writer);
-    
+
     // #[cfg(mock)]
     fn mock_data() -> Vec<Box<Self>>;
 }
 
 // #[cfg(mock)]
-pub fn mock_string() -> String{
+pub fn mock_string() -> String {
     use rand::*;
-    let mut ret:String = String::new();
-    for i in 0..10{
+    let mut ret: String = String::new();
+    for i in 0..10 {
         ret.push('草');
     }
     ret
@@ -32,26 +32,26 @@ pub fn mock_string() -> String{
 macro_rules! gen_test_reader_writer_for_type {
     ($f:ident,$t:ident) => {
         #[test]
-        fn $f(){
+        fn $f() {
             let data = $t::mock_data();
-            for d in data{
+            for d in data {
                 let mut writer = Writer::new();
                 d.write(&mut writer);
                 let raw_data = writer.data.as_mut_ptr();
                 let mut reader = Reader::new(raw_data);
                 let read = $t::read(&mut reader);
-                assert_eq!(*d,read)
+                assert_eq!(*d, read)
             }
         }
     };
 }
 
 // #[cfg(mock)]
-pub fn mock_object<K:Ord,V>(kf:&dyn Fn()->K,vf:&dyn Fn()->V) -> BTreeMap<K,V>{
+pub fn mock_object<K: Ord, V>(kf: &dyn Fn() -> K, vf: &dyn Fn() -> V) -> BTreeMap<K, V> {
     use rand::*;
-    let mut ret:BTreeMap<K,V> = BTreeMap::new();
-    for i in 0..10{
-        ret.insert(kf(),vf());
+    let mut ret: BTreeMap<K, V> = BTreeMap::new();
+    for i in 0..10 {
+        ret.insert(kf(), vf());
     }
     ret
 }
@@ -123,17 +123,11 @@ impl Reader {
         unsafe {
             let i = *(self.data.add(self.pos) as *const u32);
             self.pos += 4;
-            let bt = [
-                i as u8,
-                (i >> 8) as u8,
-                (i >> 16) as u8,
-                (i >> 24) as u8,
-            ];
+            let bt = [i as u8, (i >> 8) as u8, (i >> 16) as u8, (i >> 24) as u8];
             f32::from_be_bytes(bt)
         }
     }
     pub fn read_f64(&mut self) -> f64 {
-
         unsafe {
             let i = *(self.data.add(self.pos) as *const u64);
             self.pos += 8;
@@ -241,7 +235,7 @@ impl Writer {
     pub fn write_string(&mut self, i: String) {
         let bytes = i.as_bytes();
         self.write_u16(bytes.len() as u16);
-        for b in bytes{
+        for b in bytes {
             self.write_u8(*b);
         }
     }

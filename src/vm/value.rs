@@ -1,17 +1,17 @@
-use super::{VMClosure, gc::*, VMState, VMClosureStatus};
-use std::{ptr::NonNull, collections::BTreeMap};
+use super::{gc::*, VMClosure, VMClosureStatus, VMState};
 use crate::binary::constant::Constant;
+use std::{collections::BTreeMap, ptr::NonNull};
 
 use std::mem::ManuallyDrop;
 // direct reference from current function call state
 // after function call will be cleaned by rust
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub enum NSValue{
+pub enum NSValue {
     Closure(NonNull<ManuallyDrop<VMClosure>>),
     String(NonNull<ManuallyDrop<String>>),
     Opaque(NonNull<ManuallyDrop<Vec<u8>>>),
     Vector(NonNull<ManuallyDrop<Vec<Value>>>),
-    Map(NonNull<ManuallyDrop<BTreeMap<String,Value>>>),
+    Map(NonNull<ManuallyDrop<BTreeMap<String, Value>>>),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -36,26 +36,30 @@ pub enum Value {
     // on gc heap
     GCValue(GCValue),
 }
-impl Value{
-    pub fn from_constant(c: Constant, constant_pool_ptr:NonNull<BTreeMap<u16,Constant>>, state:&mut VMState) -> Self {
+impl Value {
+    pub fn from_constant(
+        c: Constant,
+        constant_pool_ptr: NonNull<BTreeMap<u16, Constant>>,
+        state: &mut VMState,
+    ) -> Self {
         match c {
-            Constant::U8(v) => {Value::U8(v)}
-            Constant::I8(v) => {Value::I8(v)}
-            Constant::U16(v) => {Value::U16(v)}
-            Constant::I16(v) => {Value::I16(v)}
-            Constant::U32(v) => {Value::U32(v)}
-            Constant::I32(v) => {Value::I32(v)}
-            Constant::U64(v) => {Value::U64(v)}
-            Constant::I64(v) => {Value::I64(v)}
-            Constant::F32(v) => {Value::F32(v)}
-            Constant::F64(v) => {Value::F64(v)}
+            Constant::U8(v) => Value::U8(v),
+            Constant::I8(v) => Value::I8(v),
+            Constant::U16(v) => Value::U16(v),
+            Constant::I16(v) => Value::I16(v),
+            Constant::U32(v) => Value::U32(v),
+            Constant::I32(v) => Value::I32(v),
+            Constant::U64(v) => Value::U64(v),
+            Constant::I64(v) => Value::I64(v),
+            Constant::F32(v) => Value::F32(v),
+            Constant::F64(v) => Value::F64(v),
 
             Constant::Function(v) => {
-                let closure = VMClosure{
+                let closure = VMClosure {
                     function_bytecode: v.clone(),
                     vargs: vec![],
                     rets: vec![],
-                    registers: vec![Value::Undef;v.args_count as usize],
+                    registers: vec![Value::Undef; v.args_count as usize],
                     pc: 0,
                     status: VMClosureStatus::None,
                     constant_pool_ptr: constant_pool_ptr,
@@ -64,15 +68,24 @@ impl Value{
                 Value::GCValue(block)
             }
             Constant::Map(v) => {
-                let nm:BTreeMap<String,Value> = v.iter().map(|(k,v)|{
-                    //TODO: mut引用问题
-                    (k.clone(),Value::from_constant(v.clone(),constant_pool_ptr,state))
-                }).collect();
+                let nm: BTreeMap<String, Value> = v
+                    .iter()
+                    .map(|(k, v)| {
+                        //TODO: mut引用问题
+                        (
+                            k.clone(),
+                            Value::from_constant(v.clone(), constant_pool_ptr, state),
+                        )
+                    })
+                    .collect();
                 let block = GCValue::Map(state.gc.add_block(GCInnerValue::Map(nm)));
                 Value::GCValue(block)
             }
             Constant::Vector(v) => {
-                let nv = v.iter().map(|f| Value::from_constant(f.clone(),constant_pool_ptr,state)).collect::<Vec<_>>();
+                let nv = v
+                    .iter()
+                    .map(|f| Value::from_constant(f.clone(), constant_pool_ptr, state))
+                    .collect::<Vec<_>>();
                 let block = GCValue::Map(state.gc.add_block(GCInnerValue::Vector(nv)));
                 Value::GCValue(block)
             }
@@ -84,10 +97,9 @@ impl Value{
                 let ns = GCValue::Opaque(state.gc.add_block(GCInnerValue::Opaque(v.clone())));
                 Value::GCValue(ns)
             }
-            _ => todo!()
+            _ => todo!(),
         }
     }
-    
 }
 
 impl Value {

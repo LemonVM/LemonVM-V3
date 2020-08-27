@@ -34,7 +34,7 @@ pub enum OpCode {
     // ===== ARITH =====
     // enable operator overload will influence the performance
     // due to it looks table rather than directly doing the arith
-    
+
     // Ix will neg imm
     // Ux will cast to Ix then neg
     // NEG dst
@@ -51,14 +51,13 @@ pub enum OpCode {
     // FLOAT will +1.0
     // DEC dst
     INC,
-    // DEC but checking for overflow and 
+    // DEC but checking for overflow and
     // non int value type not allowed
     SDEC,
     // similar but inc
     SINC,
 
     // format INS src1 src2 dst
-
     ADD8,
     SUB8,
     MUL8,
@@ -133,45 +132,18 @@ pub enum OpCode {
 
     NOT,
     LNOT,
+    AND,
+    LAND,
+    OR,
+    LOR,
 
     EQ,
     SEQ,
-    NEQ,
-    NSEQ,
 
     LT,
     GT,
     LTEQ,
-
-    // ===== TEMP CONTAINER =====
-    // container object managed by rust instead of managed by gc
-    // make dst a vec object, if already is , then push src to dst
-    // VEC dst src
-    VEC,
-
-    TOGC,
-    // ===== FUNCTION? =====
-    // make dst an args object, if already is , then add another arg
-    // ARGS src dst
-    ARGS,
-    // use to set multiple return value
-    RETS,
-
-    // ===== OBJECT and MODULE =====
-    // An object is an runtime defined anonymous object
-    // or loaded a dynamic(which means has state) module(lmvmb file loaded) instance
-    
-    // LOADMODULE will load module into the vmstate
-    // LOADMODULE [module_name_index or 0xFFFF(local)]
-    LOADMODULE,
-    // NEWOBJM dst [module_name_index or 0xFFFF(local)]
-    NEWOBJM,
-    SETV,
-    ADDKV,
-    INDEXV,
-    FINDKBYV,
-    // NEWOBJ dst
-    NEWOBJ,
+    GTEQ,
 
     // ===== CONTROL FLOW =====
     // normally won't generate
@@ -183,6 +155,12 @@ pub enum OpCode {
     // if false
     // JPN src [16bit label]
     JPN,
+    // ===== FUNCTION? =====
+    // make dst an args object, if already is , then add another arg
+    // ARGS src dst
+    ARGS,
+    // use to set multiple return value
+    RETS,
     // note all functions in vm ONLY has one param called arguments
     // CALL clos-reg args-reg ret-reg
     CALL,
@@ -196,9 +174,33 @@ pub enum OpCode {
     // RETURN src dst(from father)
     RETURN,
     // RETURNM src(RETS) dst(from father)
-    RETURNM, 
+    RETURNM,
     // raise an error into VM status
     // check next exception table in current function
     // if not then goto last function call satck with last pc and check recursively
     ERROR,
+
+    // ===== TEMP CONTAINER =====
+    // container object managed by rust instead of managed by gc
+    // make dst a vec object, if already is , then push src to dst
+    // VEC dst src
+    VEC,
+
+    TOGC,
+
+    // ===== OBJECT and MODULE =====
+    // An object is an runtime defined anonymous object
+    // or loaded a dynamic(which means has state) module(lmvmb file loaded) instance
+
+    // LOADMODULE will load module into the vmstate
+    // LOADMODULE [module_name_index or 0xFFFF(local)]
+    LOADMODULE,
+    // NEWOBJM dst [module_name_index or 0xFFFF(local)]
+    NEWOBJM,
+    SETV,
+    ADDKV,
+    INDEXV,
+    FINDKBYV,
+    // NEWOBJ dst
+    NEWOBJ,
 }

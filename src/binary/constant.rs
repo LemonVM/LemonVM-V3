@@ -3,8 +3,8 @@ use super::{
     io::{BinaryRW, Reader, Writer},
     TypeTags,
 };
-use std::collections::BTreeMap;
 use crate::gen_test_reader_writer_for_type;
+use std::collections::BTreeMap;
 // type tag + data
 #[derive(Debug, Clone, PartialEq)]
 pub enum Constant {
@@ -40,7 +40,7 @@ impl BinaryRW for Constant {
             ),
             _ if TypeTags::Vector as u8 == tag => {
                 Constant::Vector(reader.read_vec(|reader| Constant::read(reader)))
-            },
+            }
             _ if TypeTags::U8 as u8 == tag => Constant::U8(reader.read_u8()),
             _ if TypeTags::I8 as u8 == tag => Constant::I8(reader.read_i8()),
             _ if TypeTags::U16 as u8 == tag => Constant::U16(reader.read_u16()),
@@ -114,12 +114,12 @@ impl BinaryRW for Constant {
             }
             Constant::Vector(v) => {
                 writer.write_u8(TypeTags::Vector as u8);
-                writer.write_vec(v.clone(), |writer,v| v.write(writer));
+                writer.write_vec(v.clone(), |writer, v| v.write(writer));
             }
             Constant::Function(v) => {
                 writer.write_u8(TypeTags::Function as u8);
                 v.write(writer);
-            },
+            }
             Constant::Opaque(v) => {
                 writer.write_u8(TypeTags::Opaque as u8);
                 writer.write_vec(v.clone(), |r, v| r.write_u8(v));
@@ -128,9 +128,9 @@ impl BinaryRW for Constant {
     }
 
     // #[cfg(mock)]
-    fn mock_data() -> Vec<Box<Self>>{
-        use rand::*;
+    fn mock_data() -> Vec<Box<Self>> {
         use crate::binary::io::*;
+        use rand::*;
         vec![
             Box::new(Constant::String(mock_string())),
             Box::new(Constant::U8(random())),
@@ -143,15 +143,17 @@ impl BinaryRW for Constant {
             Box::new(Constant::I64(random())),
             Box::new(Constant::F32(random())),
             Box::new(Constant::F64(random())),
-            Box::new(Constant::Map(mock_object(&||mock_string(),&||Constant::U8(random())))),
+            Box::new(Constant::Map(mock_object(&|| mock_string(), &|| {
+                Constant::U8(random())
+            }))),
             Box::new(Constant::Function((&*Function::mock_data()[0]).clone())),
             Box::new(Constant::Vector(vec![
                 Constant::U8(random()),
                 Constant::U64(random()),
-                Constant::Map(mock_object(&||mock_string(),&||Constant::U8(random()))),
-                Constant::Function((&*Function::mock_data()[0]).clone())
-                ]),),
+                Constant::Map(mock_object(&|| mock_string(), &|| Constant::U8(random()))),
+                Constant::Function((&*Function::mock_data()[0]).clone()),
+            ])),
         ]
     }
 }
-gen_test_reader_writer_for_type!(test_rw_mock_Constant,Constant);
+gen_test_reader_writer_for_type!(test_rw_mock_Constant, Constant);

@@ -1,13 +1,12 @@
-use std::{collections::BTreeMap, ptr::NonNull};
-use crate::binary::{function::Function, constant::Constant};
-use value::Value;
+use crate::binary::{constant::Constant, function::Function};
 use gc::GC;
+use std::{collections::BTreeMap, ptr::NonNull};
+use value::Value;
 
 pub mod gc;
 pub mod interpreter;
 pub mod register;
 pub mod value;
-
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum VMClosureStatus {
@@ -29,23 +28,23 @@ pub struct VMClosure {
     pub registers: Vec<Value>,
     pub pc: u16,
     pub status: VMClosureStatus,
-    pub constant_pool_ptr: NonNull<BTreeMap<u16,Constant>>
+    pub constant_pool_ptr: NonNull<BTreeMap<u16, Constant>>,
 }
-#[derive(Debug,Clone)]
-pub struct VMFunctionCallArgsObject{
+#[derive(Debug, Clone)]
+pub struct VMFunctionCallArgsObject {
     // save value rather than using reference
     args: Vec<Value>,
 }
 
-impl VMClosure{
-    fn call_with_args_obj(&mut self,args_obj:VMFunctionCallArgsObject){
+impl VMClosure {
+    fn call_with_args_obj(&mut self, args_obj: VMFunctionCallArgsObject) {
         let args = self.function_bytecode.args_count;
         let mut aobj = args_obj.clone();
-        for i in 0..args as usize{
+        for i in 0..args as usize {
             // default value is undef
             self.registers[i] = aobj.args.pop().unwrap_or(Value::Undef);
         }
-        if aobj.args.len() > 0{
+        if aobj.args.len() > 0 {
             self.vargs.append(&mut aobj.args);
         }
     }
@@ -65,8 +64,13 @@ pub struct VMState {
     pub function_call_chain_states: Vec<VMClosure>,
     // when resume a function the heap registers will be copied into stack(depends on size)
     pub current_function_call_state: VMClosure,
+    // after throwing an exception and in that scope there is no exception handler
+    // in that case the exception will throw to super function call
+    // for saving the exception status adding the closure into the exception_stack
+    // when the exception is finally handled the exception stack is renewed
+    pub exception_stack: Vec<VMClosure>,
 
-    pub constant_pools: Vec<BTreeMap<u16,Constant>>,
+    pub constant_pools: Vec<BTreeMap<u16, Constant>>,
 
     // enable debug mode will able to see the bytecode executed
     pub debug_mode: bool,
@@ -76,16 +80,16 @@ pub struct VMState {
     // in runtime add break point(pc) or removing a break point in current function
     pub break_points: Vec<u16>,
 
-    pub gc: Box<dyn GC>
+    pub gc: Box<dyn GC>,
 }
 
-impl VMState{
+impl VMState {
     // if the function loaded the module then return true
     // if the function is just doing some other work just return false
-    fn module_load_hook(function: fn()->bool) -> bool {
+    fn module_load_hook(function: fn() -> bool) -> bool {
         false
     }
-    fn load_module(){}
+    fn load_module() {}
     // normally use in start up
-    fn run_module(){}
+    fn run_module() {}
 }

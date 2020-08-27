@@ -4,7 +4,7 @@ use super::{
 };
 use std::collections::BTreeMap;
 // strong type extension
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 enum Type {
     Mono(TypeTags),
     Record(BTreeMap<String, TypeTags>),
@@ -12,7 +12,7 @@ enum Type {
     Function(Vec<Type>),
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 pub struct Variable {
     name: u16,
     access: u8,
@@ -40,14 +40,14 @@ impl BinaryRW for Variable {
     }
 
     // #[cfg(mock)]
-    fn mock_data() -> Vec<Box<Self>>{
+    fn mock_data() -> Vec<Box<Self>> {
         use rand::*;
         let mut ret = vec![];
-        for _ in 0..10{
-            ret.push(Box::new(Variable{
+        for _ in 0..10 {
+            ret.push(Box::new(Variable {
                 name: random(),
                 access: random(),
-                init_value: if random(){Some(random())}else{None},
+                init_value: if random() { Some(random()) } else { None },
             }));
         }
         ret

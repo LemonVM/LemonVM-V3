@@ -1,7 +1,6 @@
 use super::io::{BinaryRW, Reader, Writer};
 use crate::gen_test_reader_writer_for_type;
 
-
 #[derive(Debug, Clone, PartialEq)]
 pub struct DebugPrecompiledLineNumber {
     start_pc: u16,
@@ -25,11 +24,11 @@ impl BinaryRW for DebugPrecompiledLineNumber {
         writer.write_u16(self.precompiled_line_number);
     }
     // #[cfg(mock)]
-    fn mock_data() -> Vec<Box<Self>>{
+    fn mock_data() -> Vec<Box<Self>> {
         use rand::*;
         let mut ret = vec![];
-        for _ in 0..10{
-            ret.push(Box::new(DebugPrecompiledLineNumber{
+        for _ in 0..10 {
+            ret.push(Box::new(DebugPrecompiledLineNumber {
                 start_pc: random(),
                 end_pc: random(),
                 precompiled_line_number: random(),
@@ -38,8 +37,10 @@ impl BinaryRW for DebugPrecompiledLineNumber {
         ret
     }
 }
-gen_test_reader_writer_for_type!(test_rw_mock_DebugPrecompiledLineNumber,DebugPrecompiledLineNumber);
-
+gen_test_reader_writer_for_type!(
+    test_rw_mock_DebugPrecompiledLineNumber,
+    DebugPrecompiledLineNumber
+);
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DebugPrecompiledLineNumberTable {
@@ -57,18 +58,24 @@ impl BinaryRW for DebugPrecompiledLineNumberTable {
     }
 
     // #[cfg(mock)]
-    fn mock_data() -> Vec<Box<Self>>{
+    fn mock_data() -> Vec<Box<Self>> {
         use rand::*;
         let mut ret = vec![];
-        for _ in 0..10{
-            ret.push(Box::new(DebugPrecompiledLineNumberTable{
-                table: DebugPrecompiledLineNumber::mock_data().iter().map(|d| (&**d).clone()).collect()
+        for _ in 0..10 {
+            ret.push(Box::new(DebugPrecompiledLineNumberTable {
+                table: DebugPrecompiledLineNumber::mock_data()
+                    .iter()
+                    .map(|d| (&**d).clone())
+                    .collect(),
             }));
         }
         ret
     }
 }
-gen_test_reader_writer_for_type!(test_rw_mock_DebugPrecompiledLineNumberTable,DebugPrecompiledLineNumberTable);
+gen_test_reader_writer_for_type!(
+    test_rw_mock_DebugPrecompiledLineNumberTable,
+    DebugPrecompiledLineNumberTable
+);
 // such as your code is compiled to bytecode
 // JPE 0x000000  // if xxx == true
 #[derive(Debug, Clone, PartialEq)]
@@ -95,11 +102,11 @@ impl BinaryRW for DebugCompiledByteCodeComment {
         writer.write_u16(self.comment);
     }
     // #[cfg(mock)]
-    fn mock_data() -> Vec<Box<Self>>{
+    fn mock_data() -> Vec<Box<Self>> {
         use rand::*;
         let mut ret = vec![];
-        for _ in 0..10{
-            ret.push(Box::new(DebugCompiledByteCodeComment{
+        for _ in 0..10 {
+            ret.push(Box::new(DebugCompiledByteCodeComment {
                 start_pc: random(),
                 end_pc: random(),
                 comment: random(),
@@ -109,7 +116,10 @@ impl BinaryRW for DebugCompiledByteCodeComment {
     }
 }
 
-gen_test_reader_writer_for_type!(test_rw_mock_DebugCompiledByteCodeComment,DebugCompiledByteCodeComment);
+gen_test_reader_writer_for_type!(
+    test_rw_mock_DebugCompiledByteCodeComment,
+    DebugCompiledByteCodeComment
+);
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DebugCompiledByteCodeCommentTable {
@@ -124,19 +134,25 @@ impl BinaryRW for DebugCompiledByteCodeCommentTable {
     fn write(&self, writer: &mut Writer) {
         writer.write_vec(self.table.clone(), |writer, i| i.write(writer))
     }
-        // #[cfg(mock)]
-        fn mock_data() -> Vec<Box<Self>>{
-            use rand::*;
-            let mut ret = vec![];
-            for _ in 0..10{
-                ret.push(Box::new(DebugCompiledByteCodeCommentTable{
-                    table: DebugCompiledByteCodeComment::mock_data().iter().map(|d| (&**d).clone()).collect()
-                }));
-            }
-            ret
+    // #[cfg(mock)]
+    fn mock_data() -> Vec<Box<Self>> {
+        use rand::*;
+        let mut ret = vec![];
+        for _ in 0..10 {
+            ret.push(Box::new(DebugCompiledByteCodeCommentTable {
+                table: DebugCompiledByteCodeComment::mock_data()
+                    .iter()
+                    .map(|d| (&**d).clone())
+                    .collect(),
+            }));
         }
+        ret
+    }
 }
-gen_test_reader_writer_for_type!(test_rw_mock_DebugCompiledByteCodeCommentTable,DebugCompiledByteCodeCommentTable);
+gen_test_reader_writer_for_type!(
+    test_rw_mock_DebugCompiledByteCodeCommentTable,
+    DebugCompiledByteCodeCommentTable
+);
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DebugVariable {
@@ -165,11 +181,11 @@ impl BinaryRW for DebugVariable {
         writer.write_u16(self.register);
     }
     // #[cfg(mock)]
-    fn mock_data() -> Vec<Box<Self>>{
+    fn mock_data() -> Vec<Box<Self>> {
         use rand::*;
         let mut ret = vec![];
-        for _ in 0..10{
-            ret.push(Box::new(DebugVariable{
+        for _ in 0..10 {
+            ret.push(Box::new(DebugVariable {
                 name: random(),
                 start_pc: random(),
                 end_pc: random(),
@@ -179,12 +195,11 @@ impl BinaryRW for DebugVariable {
         ret
     }
 }
-gen_test_reader_writer_for_type!(test_rw_mock_DebugVariable,DebugVariable);
+gen_test_reader_writer_for_type!(test_rw_mock_DebugVariable, DebugVariable);
 // break points: dynamically adding break points
 pub struct DebugBreakPointTable {
     pub table: Vec<u16>,
 }
-
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DebugVariableTable {
@@ -199,20 +214,22 @@ impl BinaryRW for DebugVariableTable {
     fn write(&self, writer: &mut Writer) {
         writer.write_vec(self.table.clone(), |writer, i| i.write(writer))
     }
-            // #[cfg(mock)]
-            fn mock_data() -> Vec<Box<Self>>{
-                use rand::*;
-                let mut ret = vec![];
-                for _ in 0..10{
-                    ret.push(Box::new(DebugVariableTable{
-                        table: DebugVariable::mock_data().iter().map(|d| (&**d).clone()).collect()
-                    }));
-                }
-                ret
-            }
+    // #[cfg(mock)]
+    fn mock_data() -> Vec<Box<Self>> {
+        use rand::*;
+        let mut ret = vec![];
+        for _ in 0..10 {
+            ret.push(Box::new(DebugVariableTable {
+                table: DebugVariable::mock_data()
+                    .iter()
+                    .map(|d| (&**d).clone())
+                    .collect(),
+            }));
+        }
+        ret
+    }
 }
-gen_test_reader_writer_for_type!(test_rw_mock_DebugVariableTable,DebugVariableTable);
-
+gen_test_reader_writer_for_type!(test_rw_mock_DebugVariableTable, DebugVariableTable);
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DebugSourceInfo {
@@ -235,11 +252,11 @@ impl BinaryRW for DebugSourceInfo {
         writer.write_u16(self.source_file_name);
     }
     // #[cfg(mock)]
-    fn mock_data() -> Vec<Box<Self>>{
+    fn mock_data() -> Vec<Box<Self>> {
         use rand::*;
         let mut ret = vec![];
-        for _ in 0..10{
-            ret.push(Box::new(DebugSourceInfo{
+        for _ in 0..10 {
+            ret.push(Box::new(DebugSourceInfo {
                 source: random(),
                 source_file_name: random(),
             }));
@@ -248,7 +265,7 @@ impl BinaryRW for DebugSourceInfo {
     }
 }
 
-gen_test_reader_writer_for_type!(test_rw_mock_DebugSourceInfo,DebugSourceInfo);
+gen_test_reader_writer_for_type!(test_rw_mock_DebugSourceInfo, DebugSourceInfo);
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DebugInfo {
@@ -282,22 +299,38 @@ impl BinaryRW for DebugInfo {
         writer.write_option(self.comment_table.clone(), |writer, o| o.write(writer));
     }
     // #[cfg(mock)]
-    fn mock_data() -> Vec<Box<Self>>{
+    fn mock_data() -> Vec<Box<Self>> {
         use rand::*;
         let mut ret = vec![];
-        for _ in 0..10{
-            let source_info = if random(){Some((&*DebugSourceInfo::mock_data()[0]).clone())}else{None};
-            let variable_table = if random(){Some((&*DebugVariableTable::mock_data()[0]).clone())}else{None};
-            let precompiled_line_number_table = if random(){Some((&*DebugPrecompiledLineNumberTable::mock_data()[0]).clone())}else{None};
-            let comment_table = if random(){Some((&*DebugCompiledByteCodeCommentTable::mock_data()[0]).clone())}else{None};
-            ret.push(Box::new(DebugInfo{
+        for _ in 0..10 {
+            let source_info = if random() {
+                Some((&*DebugSourceInfo::mock_data()[0]).clone())
+            } else {
+                None
+            };
+            let variable_table = if random() {
+                Some((&*DebugVariableTable::mock_data()[0]).clone())
+            } else {
+                None
+            };
+            let precompiled_line_number_table = if random() {
+                Some((&*DebugPrecompiledLineNumberTable::mock_data()[0]).clone())
+            } else {
+                None
+            };
+            let comment_table = if random() {
+                Some((&*DebugCompiledByteCodeCommentTable::mock_data()[0]).clone())
+            } else {
+                None
+            };
+            ret.push(Box::new(DebugInfo {
                 source_info,
                 variable_table,
                 precompiled_line_number_table,
-                comment_table
+                comment_table,
             }));
         }
         ret
     }
 }
-gen_test_reader_writer_for_type!(test_rw_mock_DebugInfo,DebugInfo);
+gen_test_reader_writer_for_type!(test_rw_mock_DebugInfo, DebugInfo);

@@ -14,7 +14,7 @@ mod test;
 
 // TODO: More premetive types
 #[repr(u8)]
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 pub enum TypeTags {
     // Primitives
     Undefined = 0,

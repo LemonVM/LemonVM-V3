@@ -78,16 +78,17 @@ impl BinaryRW for LemonVMByteCode {
         writer.write_vec(self.enabled_extensions.clone(), |write, u| {
             write.write_u8(u)
         });
-        writer.write_map(self.constant_pool.clone(), |writer,(id,c)| {writer.write_u16(id);
+        writer.write_map(self.constant_pool.clone(), |writer, (id, c)| {
+            writer.write_u16(id);
             c.write(writer);
-        } );
+        });
         writer.write_option(self.entry, |write, u| write.write_u16(u));
-        writer.write_vec(self.variables.clone(), |writer,i|i.write(writer))
+        writer.write_vec(self.variables.clone(), |writer, i| i.write(writer))
     }
 
     //TODO: i don't think this need test
     // #[cfg(mock)]
-    fn mock_data() -> Vec<Box<Self>>{
+    fn mock_data() -> Vec<Box<Self>> {
         use rand::*;
         let mut ret = vec![];
         ret
