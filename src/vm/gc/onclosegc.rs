@@ -1,12 +1,12 @@
 use super::*;
 use std::alloc::{dealloc, Layout};
 
-struct OnCloseGC {
-    blocks: Vec<OnCloseBlock>,
-    pool: Vec<GCInnerValue>,
+pub struct OnCloseGC {
+    pub blocks: Vec<OnCloseBlock>,
+    pub pool: Vec<GCInnerValue>,
 }
 
-struct OnCloseBlock {
+pub struct OnCloseBlock {
     gc: NonNull<OnCloseGC>,
     d: NonNull<GCInnerValue>,
 }

@@ -7,11 +7,11 @@ use std::mem::ManuallyDrop;
 // after function call will be cleaned by rust
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum NSValue {
-    Closure(NonNull<ManuallyDrop<VMClosure>>),
-    String(NonNull<ManuallyDrop<String>>),
-    Opaque(NonNull<ManuallyDrop<Vec<u8>>>),
-    Vector(NonNull<ManuallyDrop<Vec<Value>>>),
-    Map(NonNull<ManuallyDrop<BTreeMap<String, Value>>>),
+    Closure(NonNull<VMClosure>),
+    String(NonNull<String>),
+    Opaque(NonNull<Vec<u8>>),
+    Vector(NonNull<Vec<Value>>),
+    Map(NonNull<BTreeMap<String, Value>>),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -57,12 +57,12 @@ impl Value {
             Constant::Function(v) => {
                 let closure = VMClosure {
                     function_bytecode: v.clone(),
-                    vargs: vec![],
-                    rets: vec![],
+                    args: vec![],
                     registers: vec![Value::Undef; v.args_count as usize],
                     pc: 0,
                     status: VMClosureStatus::None,
                     constant_pool_ptr: constant_pool_ptr,
+                    stack_values: vec![]
                 };
                 let block = GCValue::Closure(state.gc.add_block(GCInnerValue::Closure(closure)));
                 Value::GCValue(block)

@@ -1,7 +1,7 @@
 use super::register;
 use crate::config::*;
 
-use super::{value::Value, VMClosureStatus, VMState};
+use super::{value::{NSValue, Value}, VMClosureStatus, VMState};
 use crate::{
     binary::{constant::Constant, function::Function, opcode::OpCode},
     config::*,
@@ -107,7 +107,7 @@ fn value_to_bool(value: &Value) -> Option<bool> {
         _ => None,
     }
 }
-fn interpreter(state: &mut VMState) {
+pub fn interpreter(state: &mut VMState) {
     // init
     let mut current_function_state = state.current_function_call_state.clone();
     if current_function_state.registers.len() > MAX_REGISTER_ON_STACK {
@@ -144,10 +144,9 @@ fn interpreter(state: &mut VMState) {
                 // return to super function stack
                 // set exception
                 // save template stack variable to current function state
-                let mut cfs = state.function_call_chain_states.pop().unwrap();
-                cfs.registers = stack_regs.to_vec();
-                cfs.pc = pc;
-                state.exception_stack.push(cfs);
+                state.current_function_call_state.registers = stack_regs.to_vec();
+                state.current_function_call_state.pc = pc;
+                state.exception_stack.push(state.current_function_call_state.clone());
                 if let Some(cls) = state.function_call_chain_states.pop() {
                     state.current_function_call_state = cls;
                     state.current_function_call_state.pc += 1;
@@ -166,19 +165,20 @@ fn interpreter(state: &mut VMState) {
 
         // on end function scope
         if pc >= codes.len() as u16 {
+            return;
             // TODO: I think that is an exception because a normal function at least has one return value or uses ret to return a void
         }
         let ci = codes[pc as usize];
 
         // register status
         let ins = ci as u16;
-        let e1 = (ci << 16) as u16;
-        let e1x = (ci << 16) as u32;
-        let e2 = (ci << 32) as u16;
-        let e2x = (ci << 32) as u32;
-        let e3 = (ci << 48) as u16;
+        let e1 = (ci >> 16) as u16;
+        let e1x = (ci >> 16) as u32;
+        let e2 = (ci >> 32) as u16;
+        let e2x = (ci >> 32) as u32;
+        let e3 = (ci >> 48) as u16;
         //                          u48
-        let ed = (ci << 16) as u64;
+        let ed = (ci >> 16) as u64;
         // you can ask me why i do it this way
         // no silver bullet
         match ins {
@@ -186,7 +186,7 @@ fn interpreter(state: &mut VMState) {
 
             // ===== LOAD =====
             _ if ins == OpCode::LOADK as u16 => {
-                if e3 == 0xffff {
+                if e3 == 0xFFFF {
                     let constant_pool_ref =
                         unsafe { current_function_state.constant_pool_ptr.as_ref() };
                     let constant = constant_pool_ref[&e2].clone();
@@ -1757,8 +1757,44 @@ fn interpreter(state: &mut VMState) {
                     panic!("ERROR! JPN COULD NOT PASS NON BOOLEAN VALUE")
                 }
             }
+            _ if ins == OpCode::ARGS as u16 => {
+                state.args.push(stack_regs[e1 as usize]);
+            }
             _ if ins == OpCode::CALL as u16 => {
-                pc = e1 - 1;
+                if let Value::NSValue(n) = stack_regs[e1 as usize]{
+                    if let NSValue::Closure(c) = n {
+                        // save status
+                        state.current_function_call_state.registers = stack_regs.to_vec();
+                        state.current_function_call_state.pc = pc;
+                        // push current function to function call stack
+                        state.function_call_chain_states.push(state.current_function_call_state.clone());
+                        // change current function
+                        state.current_function_call_state = unsafe{c.as_ref()}.clone();
+                        // copy args into function args
+                        state.current_function_call_state.args = state.args.clone();
+                        return interpreter(state);
+                    }
+                }
+                // TODO: implement gc closure call
+            }
+            _ if ins == OpCode::RET as u16 => {
+                if e1 == 0xFFFF{
+                    state.return_value = None;
+                }else{
+                    state.return_value = Some(stack_regs[e1 as usize]);
+                }
+                if let Some(cls) = state.function_call_chain_states.pop() {
+                    state.current_function_call_state = cls;
+                    state.current_function_call_state.pc += 1;
+                    return interpreter(state);
+                }
+                // the outer
+                else {
+                    return;
+                }
+            }
+            _ if ins == OpCode::RETN as u16 => {
+                state.return_values.push(stack_regs[e1 as usize]);
             }
             _ => unimplemented!(),
         }

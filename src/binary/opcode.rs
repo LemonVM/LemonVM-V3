@@ -156,25 +156,32 @@ pub enum OpCode {
     // JPN src [16bit label]
     JPN,
     // ===== FUNCTION? =====
-    // make dst an args object, if already is , then add another arg
-    // ARGS src dst
+    // note: all functions in vm ONLY has one param called argument
+    // and that is storaged in VMState
+    // add src to args from VMState
+    // ARGS src
     ARGS,
-    // use to set multiple return value
-    RETS,
-    // note all functions in vm ONLY has one param called arguments
-    // CALL clos-reg args-reg ret-reg
+    // NARGS src(name) src(value)
+    // TODO: implement
+    NARGS,
+    // after call args will be cleaned
+    // CALL clos-reg
     CALL,
     // this ins is unstable, so normally will not generate
     // TAILCALL args-reg
     // TAILCALL,
+    // TODO: implement
     CALLCONS,
+    // TODO: implement
     CALLMETHOD,
-    // RET no return value
+    // RET 0xFFFF => return void
+    // RET src
+    // set return value to the VMState
     RET,
-    // RETURN src dst(from father)
-    RETURN,
-    // RETURNM src(RETS) dst(from father)
-    RETURNM,
+    // RETN src(RETS)
+    // append return value into the VMState
+    // usage: RETN 0x0100; RETN 0x0200; RET 0xFFFF;
+    RETN,
     // raise an error into VM status
     // check next exception table in current function
     // if not then goto last function call satck with last pc and check recursively

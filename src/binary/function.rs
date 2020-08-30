@@ -126,8 +126,8 @@ gen_test_reader_writer_for_type!(test_rw_mock_ExceptionTable, ExceptionTable);
 #[derive(Debug, Clone, PartialEq)]
 pub struct Function {
     //TODO: prob add an option name
-    is_multi_return_function: bool,
-    function_type: FunctionType,
+    pub is_multi_return_function: bool,
+    pub function_type: FunctionType,
     // for example
     // args count is 3 f(a,b,c) will automatically use 4 register
     // the forth one is vargs

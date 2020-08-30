@@ -1,7 +1,7 @@
 use crate::binary::{constant::Constant, function::Function};
 use gc::GC;
 use std::{collections::BTreeMap, ptr::NonNull};
-use value::Value;
+use value::{NSValue, Value};
 
 pub mod gc;
 pub mod interpreter;
@@ -23,29 +23,61 @@ pub enum VMClosureStatus {
 #[derive(Debug, Clone, PartialEq)]
 pub struct VMClosure {
     pub function_bytecode: Function,
-    pub vargs: Vec<Value>,
-    pub rets: Vec<Value>,
+    pub args: Vec<Value>,
+    // pub rets: Vec<Value>,
     pub registers: Vec<Value>,
     pub pc: u16,
     pub status: VMClosureStatus,
     pub constant_pool_ptr: NonNull<BTreeMap<u16, Constant>>,
+    pub stack_values: Vec<NSValue>,
 }
-#[derive(Debug, Clone)]
-pub struct VMFunctionCallArgsObject {
-    // save value rather than using reference
-    args: Vec<Value>,
+
+macro_rules! new_stack_value_method_impl {
+    ($name:ident,$data_type:ty,$alias_type:ident) => {
+        pub fn $name(&mut self, data:$data_type) -> NSValue{
+            let b = Box::new(data);
+            let ptr = Box::leak(b).into();
+            let v = NSValue::$alias_type(ptr);
+            self.stack_values.push(v);
+            v
+        }
+    };
 }
 
 impl VMClosure {
-    fn call_with_args_obj(&mut self, args_obj: VMFunctionCallArgsObject) {
-        let args = self.function_bytecode.args_count;
-        let mut aobj = args_obj.clone();
-        for i in 0..args as usize {
-            // default value is undef
-            self.registers[i] = aobj.args.pop().unwrap_or(Value::Undef);
-        }
-        if aobj.args.len() > 0 {
-            self.vargs.append(&mut aobj.args);
+    new_stack_value_method_impl!(new_closure,VMClosure,Closure);
+    new_stack_value_method_impl!(new_string,String,String);
+    new_stack_value_method_impl!(new_opaque,Vec<u8>,Opaque);
+    new_stack_value_method_impl!(new_vec,Vec<Value>,Vector);
+    new_stack_value_method_impl!(new_map,BTreeMap<String,Value>,Map);
+    pub fn drop(self){
+        use std::alloc::{dealloc, Layout};
+        use std::ptr;
+        for v in self.stack_values{
+            unsafe{
+                match v {
+                    NSValue::Closure(c) => {
+                        ptr::drop_in_place(c.as_ptr());
+                        dealloc(c.as_ptr() as *mut u8,Layout::new::<VMClosure>());
+                    }
+                    NSValue::String(s) => {
+                        ptr::drop_in_place(s.as_ptr());
+                        dealloc(s.as_ptr() as *mut u8,Layout::new::<String>());
+                    }
+                    NSValue::Opaque(o) => {
+                        ptr::drop_in_place(o.as_ptr());
+                        dealloc(o.as_ptr() as *mut u8,Layout::new::<Vec<u8>>());
+                    }
+                    NSValue::Vector(v) => {
+                        ptr::drop_in_place(v.as_ptr());
+                        dealloc(v.as_ptr() as *mut u8,Layout::new::<Vec<Value>>());
+                    }
+                    NSValue::Map(m)=> {
+                        ptr::drop_in_place(m.as_ptr());
+                        dealloc(m.as_ptr() as *mut u8,Layout::new::<BTreeMap<String,Value>>());
+                    }
+                }
+            }
         }
     }
 }
@@ -69,6 +101,12 @@ pub struct VMState {
     // for saving the exception status adding the closure into the exception_stack
     // when the exception is finally handled the exception stack is renewed
     pub exception_stack: Vec<VMClosure>,
+    
+    pub args: Vec<Value>,
+    pub nargs: BTreeMap<String,Value>,
+
+    pub return_value: Option<Value>,
+    pub return_values: Vec<Value>,
 
     pub constant_pools: Vec<BTreeMap<u16, Constant>>,
 
