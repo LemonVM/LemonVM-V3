@@ -1796,6 +1796,9 @@ pub fn interpreter(state: &mut VMState) {
             _ if ins == OpCode::RETN as u16 => {
                 state.return_values.push(stack_regs[e1 as usize]);
             }
+            _ if ins == OpCode::ERROR as u16 => {
+                current_function_state.status = VMClosureStatus::Error;
+            }
             _ => unimplemented!(),
         }
 

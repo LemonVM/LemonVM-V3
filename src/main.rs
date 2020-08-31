@@ -24,6 +24,7 @@ fn main() {
             INS!(LOADK,0x0000u16,0x0000u16,0xFFFFu16),
             INS!(LOADK,0x0001u16,0x0001u16,0xFFFFu16),
             INS!(ADD8 ,0x0000u16,0x0001u16,0x0002u16),
+            INS!(ERROR,0x0000u16,0x0000u16,0x0000u16),
             INS!(RET  ,0x0002u16,0x0000u16,0x0000u16),
         ],
     
