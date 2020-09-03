@@ -15,17 +15,56 @@ macro_rules! INS {
 }
 
 fn main() {
+    let fib = Function{
+        is_multi_return_function: false,
+        function_type: FunctionType::Function,
+        args_count: 1,
+        max_registers: 255,
+        code: vec![
+            // load 0
+            INS!(IMMU32,0x0001u16,0x0000u16,0x0000u16),
+            // load 1
+            INS!(IMMU32,0x0002u16,0x0001u16,0x0000u16),
+            // if args[0] == 0 || args[0] == 1
+            INS!(SEQ,0x0000u16,0x0001u16,0x0003u16),
+            INS!(SEQ,0x0000u16,0x0002u16,0x0004u16),
+            INS!(OR ,0x0003u16,0x0004u16,0x0003u16),
+            INS!(JPN,0x0003u16,0x0007u16,0x0000u16),
+            INS!(RET,0x0002u16,0x0000u16,0x0000u16),
+            // else
+            // load this closure
+            INS!(LOADK,0x0004u16,0x0001u16,0xFFFFu16),
+            // load 2
+            INS!(IMMU32,0x0005u16,0x0002u16,0x0000u16),
+            INS!(SUB32,0x0000u16,0x0005u16,0x0006u16),
+            INS!(ARGS,0x0006u16,0x0000u16,0x0000u16),
+            INS!(CALL,0x0004u16,0x0000u16,0x0000u16),
+            INS!(GETRET,0x0007u16,0x0000u16,0x0000u16),
+
+            INS!(SUB32,0x0000u16,0x0002u16,0x0006u16),
+            INS!(ARGS,0x0006u16,0x0000u16,0x0000u16),
+            INS!(CALL,0x0004u16,0x0000u16,0x0000u16),
+            INS!(GETRET,0x0008u16,0x0000u16,0x0000u16),
+            INS!(ADD32,0x0007u16,0x0008u16,0x0007u16),
+
+            INS!(RET  ,0x0007u16,0x0000u16,0x0000u16),
+        ],
+    
+        exception_table: None,
+        debug_info: None,
+    };
     let bytecode = Function{
         is_multi_return_function: false,
         function_type: FunctionType::Function,
         args_count: 0,
         max_registers: 255,
         code: vec![
-            INS!(LOADK,0x0000u16,0x0000u16,0xFFFFu16),
-            INS!(LOADK,0x0001u16,0x0001u16,0xFFFFu16),
-            INS!(ADD8 ,0x0000u16,0x0001u16,0x0002u16),
-            INS!(ERROR,0x0000u16,0x0000u16,0x0000u16),
-            INS!(RET  ,0x0002u16,0x0000u16,0x0000u16),
+            INS!(LOADK,0x0000u16,0x0001u16,0xFFFFu16),
+            INS!(IMMU32,0x0001u16,0x0004u16,0x0000u16),
+            INS!(ARGS,0x0001u16,0x0000u16,0x0000u16),
+            INS!(CALL,0x0000u16,0x0000u16,0x0000u16),
+            INS!(GETRET,0x0002u16,0x0000u16,0x0000u16),
+            INS!(RET,0x0002u16,0x0000u16,0x0000u16)
         ],
     
         exception_table: None,
@@ -56,8 +95,7 @@ fn main() {
         gc,  
     };
     let mut CP = BTreeMap::new();
-    CP.insert(0x0000, Constant::U8(1));
-    CP.insert(0x0001, Constant::U8(1));
+    CP.insert(0x0001, Constant::Function(fib));
     state.constant_pools.push(CP);
     state.current_function_call_state.constant_pool_ptr = NonNull::new(state.constant_pools.last_mut().unwrap()).unwrap();
     interpreter::interpreter(&mut state);

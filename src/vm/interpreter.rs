@@ -122,6 +122,13 @@ pub fn interpreter(state: &mut VMState) {
         stack_regs[r] = current_function_state.registers[r].clone();
     }
     let mut pc = current_function_state.pc;
+    if pc == 0 && state.args.len() > 0{
+        for i in 0..current_function_state.function_bytecode.args_count as usize{
+            stack_regs[i] = state.args[i];
+        }
+        // TODO: 多余的看看咋处理
+        state.args = vec![];
+    }
     loop {
         // on exception
         if current_function_state.status == VMClosureStatus::Error {
@@ -1751,7 +1758,7 @@ pub fn interpreter(state: &mut VMState) {
             _ if ins == OpCode::JPN as u16 => {
                 if let Value::Boolean(b) = stack_regs[e1 as usize] {
                     if !b {
-                        pc = e1 - 1;
+                        pc = e2 - 1;
                     }
                 } else {
                     panic!("ERROR! JPN COULD NOT PASS NON BOOLEAN VALUE")
@@ -1761,6 +1768,8 @@ pub fn interpreter(state: &mut VMState) {
                 state.args.push(stack_regs[e1 as usize]);
             }
             _ if ins == OpCode::CALL as u16 => {
+                state.return_value = None;
+                state.return_values = vec![];
                 if let Value::NSValue(n) = stack_regs[e1 as usize]{
                     if let NSValue::Closure(c) = n {
                         // save status
@@ -1777,12 +1786,21 @@ pub fn interpreter(state: &mut VMState) {
                 }
                 // TODO: implement gc closure call
             }
+            _ if ins == OpCode::GETRET as u16 => {
+                if let Some(ret) = state.return_value{
+                    stack_regs[e1 as usize] = ret;
+                }else{
+                    stack_regs[e1 as usize] = Value::Undef;
+                }
+                state.return_value = None;
+            }
             _ if ins == OpCode::RET as u16 => {
                 if e1 == 0xFFFF{
                     state.return_value = None;
                 }else{
                     state.return_value = Some(stack_regs[e1 as usize]);
                 }
+                state.current_function_call_state.clean_stack_values();
                 if let Some(cls) = state.function_call_chain_states.pop() {
                     state.current_function_call_state = cls;
                     state.current_function_call_state.pc += 1;

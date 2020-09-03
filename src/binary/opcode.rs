@@ -174,6 +174,7 @@ pub enum OpCode {
     CALLCONS,
     // TODO: implement
     CALLMETHOD,
+    GETRET,
     // RET 0xFFFF => return void
     // RET src
     // set return value to the VMState

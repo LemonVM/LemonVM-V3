@@ -64,8 +64,11 @@ impl Value {
                     constant_pool_ptr: constant_pool_ptr,
                     stack_values: vec![]
                 };
-                let block = GCValue::Closure(state.gc.add_block(GCInnerValue::Closure(closure)));
-                Value::GCValue(block)
+                // let block = GCValue::Closure(state.gc.add_block(GCInnerValue::Closure(closure)));
+                // Value::GCValue(block)
+                let block = state.current_function_call_state.new_closure(closure);
+                // TODO: free NSValue
+                Value::NSValue(block)
             }
             Constant::Map(v) => {
                 let nm: BTreeMap<String, Value> = v

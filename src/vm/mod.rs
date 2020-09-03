@@ -50,10 +50,10 @@ impl VMClosure {
     new_stack_value_method_impl!(new_opaque,Vec<u8>,Opaque);
     new_stack_value_method_impl!(new_vec,Vec<Value>,Vector);
     new_stack_value_method_impl!(new_map,BTreeMap<String,Value>,Map);
-    pub fn drop(self){
+    pub fn clean_stack_values(&mut self){
         use std::alloc::{dealloc, Layout};
         use std::ptr;
-        for v in self.stack_values{
+        for v in &mut self.stack_values{
             unsafe{
                 match v {
                     NSValue::Closure(c) => {
