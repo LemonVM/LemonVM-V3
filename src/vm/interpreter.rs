@@ -200,11 +200,8 @@ pub fn interpreter(state: &mut VMState) {
                 // ===== LOAD =====
                 _ if ins == OpCode::LOADK as u16 => {
                     if e3 == 0xFFFF {
-                        let constant_pool_ref =
-                            unsafe { state.current_function_call_state.constant_pool_ptr.as_ref() };
-                        let constant = constant_pool_ref[&e2].clone();
-                        let value = Value::from_constant(
-                            constant,
+                        let value = Value::from_idx_pool_ptr(
+                            e2,
                             state.current_function_call_state.constant_pool_ptr,
                             state,
                         );
@@ -1812,7 +1809,6 @@ pub fn interpreter(state: &mut VMState) {
                             // change current function
                             state.current_function_call_state = unsafe { c.as_ref() }.clone();
                             // copy args into function args
-                            // state.current_function_call_state.args = state.args.clone();
                             continue 'main_interpreter;
                         }
                     }

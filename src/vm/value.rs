@@ -38,22 +38,33 @@ pub enum Value {
 }
 impl Value {
     // TODO: 缓存, 老clone跟个傻逼似的
-    pub fn from_constant(
-        c: Constant,
+    #[inline(always)]
+    pub fn from_idx_pool_ptr(
+        idx: u16,
         constant_pool_ptr: NonNull<BTreeMap<u16, Constant>>,
         state: &mut VMState,
     ) -> Self {
+        let c = &unsafe{constant_pool_ptr.as_ref()}[&idx];
+        Self::from_constant(c, constant_pool_ptr, state)
+    }
+    #[inline(always)]
+    pub fn from_constant(
+        // idx: u16,
+        c:&Constant,
+        constant_pool_ptr: NonNull<BTreeMap<u16, Constant>>,
+        state: &mut VMState,
+    ) -> Self {
+        // let c = &unsafe{constant_pool_ptr.as_ref()}[&idx];
         match c {
-            Constant::U8(v) => Value::U8(v),
-            Constant::I8(v) => Value::I8(v),
-            Constant::U16(v) => Value::U16(v),
-            Constant::I16(v) => Value::I16(v),
-            Constant::U32(v) => Value::U32(v),
-            Constant::I32(v) => Value::I32(v),
-            Constant::U64(v) => Value::U64(v),
-            Constant::I64(v) => Value::I64(v),
-            Constant::F32(v) => Value::F32(v),
-            Constant::F64(v) => Value::F64(v),
+            Constant::U8(v) => Value::U8(*v),
+            Constant::I8(v) => Value::I8(*v),
+            Constant::U16(v) => Value::U16(*v),
+            Constant::U32(v) => Value::U32(*v),
+            Constant::I32(v) => Value::I32(*v),
+            Constant::U64(v) => Value::U64(*v),
+            Constant::I64(v) => Value::I64(*v),
+            Constant::F32(v) => Value::F32(*v),
+            Constant::F64(v) => Value::F64(*v),
 
             Constant::Function(v) => {
                 let closure = VMClosure {
@@ -77,7 +88,7 @@ impl Value {
                         //TODO: mut引用问题
                         (
                             k.clone(),
-                            Value::from_constant(v.clone(), constant_pool_ptr, state),
+                            Value::from_constant(v, constant_pool_ptr, state),
                         )
                     })
                     .collect();
@@ -87,7 +98,7 @@ impl Value {
             Constant::Vector(v) => {
                 let nv = v
                     .iter()
-                    .map(|f| Value::from_constant(f.clone(), constant_pool_ptr, state))
+                    .map(|f| Value::from_constant(f, constant_pool_ptr, state))
                     .collect::<Vec<_>>();
                 let block = GCValue::Map(state.gc.add_block(GCInnerValue::Vector(nv)));
                 Value::GCValue(block)
