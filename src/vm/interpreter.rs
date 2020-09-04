@@ -1749,7 +1749,7 @@ pub fn interpreter(state: &mut VMState) {
             _ if ins == OpCode::JPE as u16 => {
                 if let Value::Boolean(b) = stack_regs[e1 as usize] {
                     if b {
-                        pc = e1 - 1;
+                        pc = e2 - 1;
                     }
                 } else {
                     panic!("ERROR! JPE COULD NOT PASS NON BOOLEAN VALUE")
