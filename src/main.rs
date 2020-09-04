@@ -60,7 +60,7 @@ fn main() {
         max_registers: 255,
         code: vec![
             INS!(LOADK,0x0000u16,0x0001u16,0xFFFFu16),
-            INS!(IMMU32,0x0001u16,0x0004u16,0x0000u16),
+            INS!(IMMU32,0x0001u16,0x0018u16,0x0000u16),
             INS!(ARGS,0x0001u16,0x0000u16,0x0000u16),
             INS!(CALL,0x0000u16,0x0000u16,0x0000u16),
             INS!(GETRET,0x0002u16,0x0000u16,0x0000u16),
@@ -72,7 +72,6 @@ fn main() {
     };
     let closure = VMClosure{
         function_bytecode: bytecode,
-        args: vec![],
         registers: vec![],
         pc: 0,
         status: VMClosureStatus::None,

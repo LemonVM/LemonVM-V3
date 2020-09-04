@@ -23,8 +23,6 @@ pub enum VMClosureStatus {
 #[derive(Debug, Clone, PartialEq)]
 pub struct VMClosure {
     pub function_bytecode: Function,
-    pub args: Vec<Value>,
-    // pub rets: Vec<Value>,
     pub registers: Vec<Value>,
     pub pc: u16,
     pub status: VMClosureStatus,

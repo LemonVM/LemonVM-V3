@@ -37,6 +37,7 @@ pub enum Value {
     GCValue(GCValue),
 }
 impl Value {
+    // TODO: 缓存, 老clone跟个傻逼似的
     pub fn from_constant(
         c: Constant,
         constant_pool_ptr: NonNull<BTreeMap<u16, Constant>>,
@@ -57,7 +58,6 @@ impl Value {
             Constant::Function(v) => {
                 let closure = VMClosure {
                     function_bytecode: v.clone(),
-                    args: vec![],
                     registers: vec![Value::Undef; v.args_count as usize],
                     pc: 0,
                     status: VMClosureStatus::None,
