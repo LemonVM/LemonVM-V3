@@ -1,9 +1,9 @@
 use crate::binary::{constant::Constant, function::Function};
-use gc::GC;
 use std::{collections::BTreeMap, ptr::NonNull};
 use value::{NSValue, Value};
 
-pub mod gc;
+
+pub mod runtime;
 pub mod interpreter;
 pub mod register;
 pub mod value;

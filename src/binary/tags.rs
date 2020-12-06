@@ -5,21 +5,22 @@ const NSVar:u8 = 0b01000000;
 const GCVar:u8 = 0b10000000;
 
 // TypeTags last 6 digit of u8 tag
-const UndefinedType:u8 = 0x00;
-const NullType:u8 = 0x01;
-const U8Type:u8 = 0x02;
-const I8Type:u8 = 0x03;
-const U16Type:u8 = 0x04;
-const I16Type:u8 = 0x05;
-const U32Type:u8 = 0x06;
-const I32Type:u8 = 0x07;
-const U64Type:u8 = 0x08;
-const I64Type:u8 = 0x09;
-const F32Type:u8 = 0x0A;
-const F64Type:u8 = 0x0B;
+pub const UndefinedType:u8 = 0x00;
+pub const NullType:u8 = 0x01;
+pub const U8Type:u8 = 0x02;
+pub const I8Type:u8 = 0x03;
+pub const U16T.ype:u8 = 0x04;
+pub const I16Type:u8 = 0x05;
+pub const U32Type:u8 = 0x06;
+pub const I32Type:u8 = 0x07;
+pub const U64Type:u8 = 0x08;
+pub const I64Type:u8 = 0x09;
+pub const F32Type:u8 = 0x0A;
+pub const F64Type:u8 = 0x0B;
 
 const StringType:u8 = 0x0C;
 const SymbolType:u8 = 0x0D;
+
 const VectorType:u8 = 0x0E;
 const MapType:u8 = 0x0F;
 const ClosureType:u8 = 0x10;

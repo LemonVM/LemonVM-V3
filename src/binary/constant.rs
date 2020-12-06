@@ -1,61 +1,55 @@
 use super::{
     function::Function,
     io::{BinaryRW, Reader, Writer},
-    TypeTags,
 };
 use crate::gen_test_reader_writer_for_type;
-use std::collections::BTreeMap;
+use super::tags::*;
 // type tag + data
-#[derive(Debug, Clone, PartialEq)]
-pub enum Constant {
-    String(String),
-    U8(u8),
-    I8(i8),
-    U16(u16),
-    I16(i16),
-    U32(u32),
-    I32(i32),
-    U64(u64),
-    I64(i64),
-    F32(f32),
-    F64(f64),
+pub union ConstantValue{
+    u_8:u8,
+    i_8:i8,
+    u_16:u16,
+    i_16:i16,
+    u_32:u32,
+    i_32:i32,
+    u_64:u64,
+    i_64:i64,
+    f_32:f32,
+    f_64:f64,
 
-    Map(BTreeMap<String, Constant>),
-    Vector(Vec<Constant>),
-    Function(Function),
-
-    Opaque(Vec<u8>),
-    // TODO: finish
-    #[cfg(BIG_INT)]
-    BigInt,
+    ref_type: u16,
+    symbol: Vec<u8>,
+    string: Vec<u8>,
+}
+#[derive(Copy, PartialEq)]
+pub struct Constant {
+    pub tag: u8,
+    pub value: ConstantValue
 }
 
 impl BinaryRW for Constant {
     fn read(reader: &mut Reader) -> Self {
         let tag = reader.read_u8();
-        match tag {
+        let value = match tag {
             _ if TypeTags::String as u8 == tag => Constant::String(reader.read_string()),
-            _ if TypeTags::Map as u8 == tag => Constant::Map(
-                reader.read_map(|reader| (reader.read_string(), Constant::read(reader))),
-            ),
-            _ if TypeTags::Vector as u8 == tag => {
-                Constant::Vector(reader.read_vec(|reader| Constant::read(reader)))
-            }
-            _ if TypeTags::U8 as u8 == tag => Constant::U8(reader.read_u8()),
-            _ if TypeTags::I8 as u8 == tag => Constant::I8(reader.read_i8()),
-            _ if TypeTags::U16 as u8 == tag => Constant::U16(reader.read_u16()),
-            _ if TypeTags::I16 as u8 == tag => Constant::I16(reader.read_i16()),
-            _ if TypeTags::U32 as u8 == tag => Constant::U32(reader.read_u32()),
-            _ if TypeTags::I32 as u8 == tag => Constant::I32(reader.read_i32()),
-            _ if TypeTags::U64 as u8 == tag => Constant::U64(reader.read_u64()),
-            _ if TypeTags::I64 as u8 == tag => Constant::I64(reader.read_i64()),
-            _ if TypeTags::F32 as u8 == tag => Constant::F32(reader.read_f32()),
-            _ if TypeTags::F64 as u8 == tag => Constant::F64(reader.read_f64()),
-            _ if TypeTags::Opaque as u8 == tag => {
-                Constant::Opaque(reader.read_vec(|reader| reader.read_u8()))
-            }
+
+            _ if U8Type as u8 == tag => Constant::U8(reader.read_u8()),
+            _ if I8Type as u8 == tag => Constant::I8(reader.read_i8()),
+            _ if U16Type as u8 == tag => Constant::U16(reader.read_u16()),
+            _ if I16Type as u8 == tag => Constant::I16(reader.read_i16()),
+            _ if U32Type as u8 == tag => Constant::U32(reader.read_u32()),
+            _ if I32Type as u8 == tag => Constant::I32(reader.read_i32()),
+            _ if U64Type as u8 == tag => Constant::U64(reader.read_u64()),
+            _ if I64Type as u8 == tag => Constant::I64(reader.read_i64()),
+            _ if F32Type as u8 == tag => Constant::F32(reader.read_f32()),
+            _ if F64Type as u8 == tag => Constant::F64(reader.read_f64()),
+
             _ if TypeTags::Function as u8 == tag => Constant::Function(Function::read(reader)),
             _ => unimplemented!(),
+        };
+        Constant{
+            tag,
+            value
         }
     }
 

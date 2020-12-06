@@ -16,4 +16,3 @@ path = "src/main.rs"
 
 [dependencies]
 rand = "*"
-arrayvec = "*"

@@ -17,7 +17,6 @@ use super::{
     constant::Constant,
     io::{BinaryRW, Reader, Writer},
     variable::Variable,
-    TypeTags,
 };
 use std::collections::BTreeMap;
 

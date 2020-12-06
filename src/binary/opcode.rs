@@ -9,6 +9,8 @@ pub enum OpCode {
     // load constant
     // LOADK dst [index] [module_name_index or 0xFFFF(local)]
     LOADK,
+    // ===== IMMLOAD =====
+    // used for performance
     // IMMBOOL dst 0x0100(true) 0x0000
     IMMBOOL,
     // IMMI16 dst [0x01 0x00 0x00 0x00](1)
@@ -18,44 +20,32 @@ pub enum OpCode {
     IMMI16,
     IMMU32,
     IMMI32,
+    IMMF32,
+
+    // EXTRA [48bit data]
+    EXTRA,
     // IMMX64 dst [32bit
     // EXTRA  32bit] 16bit
     IMMU64,
     IMMI64,
-    IMMF32,
     IMMF64,
 
     // IMMSTR only used to load short string for saving time of indexing constant pool
     // similar to IMMF64
     IMMSTR,
-    // EXTRA [48bit data]
-    EXTRA,
 
     // ===== ARITH =====
     // enable operator overload will influence the performance
     // due to it looks table rather than directly doing the arith
 
     // Ix will neg imm
-    // Ux will cast to Ix then neg
-    // NEG dst
+    // Ux will force cast to Ix then neg
+    // NEG dst src
     NEG,
     // Ix will neg imm
     // Ux and other will panic
     // TODO: throw exception
     SNEG,
-    // INT will -1
-    // FLOAT will -1.0
-    // DEC dst
-    DEC,
-    // INT will +1
-    // FLOAT will +1.0
-    // DEC dst
-    INC,
-    // DEC but checking for overflow and
-    // non int value type not allowed
-    SDEC,
-    // similar but inc
-    SINC,
 
     // format INS src1 src2 dst
     ADD8,
@@ -86,29 +76,7 @@ pub enum OpCode {
     // check value that make sure is not overflow
     // check for minus unsigned value
     // check for div 0
-    SADD8,
-    SSUB8,
-    SMUL8,
-    SREM8,
-    SDIV8,
-
-    SADD16,
-    SSUB16,
-    SMUL16,
-    SREM16,
-    SDIV16,
-
-    SADD32,
-    SSUB32,
-    SMUL32,
-    SREM32,
-    SDIV32,
-
-    SADD64,
-    SSUB64,
-    SMUL64,
-    SREM64,
-    SDIV64,
+    SA,
 
     // FLOATING ARITH
     ADDF32,
@@ -127,19 +95,15 @@ pub enum OpCode {
     BAND,
     BXOR,
     BOR,
+
     SHL,
     SHR,
 
     NOT,
-    LNOT,
     AND,
-    LAND,
     OR,
-    LOR,
 
     EQ,
-    SEQ,
-
     LT,
     GT,
     LTEQ,
@@ -156,20 +120,23 @@ pub enum OpCode {
     // JPN src [16bit label]
     JPN,
     // ===== FUNCTION? =====
-    // note: all functions in vm ONLY has one param called argument
-    // and that is storaged in VMState
-    // add src to args from VMState
-    // ARGS src
-    ARGS,
-    // NARGS src(name) src(value)
-    // TODO: implement
-    NARGS,
-    // after call args will be cleaned
-    // CALL clos-reg
+    // pushing a new call frame in local thread
+    // PUSHF
+    PUSHF,
+    // pushing a new var into the tail of call frame
+    // PUSHARG src
+    PUSHARG,
+    // pusing a named var into the tail of call frame
+    // PUSHNARG src
+    PUSHNARG,
+    // CALL
+    // enter the tail of call frame
+    // CALL src
+    // call the closure
     CALL,
     // this ins is unstable, so normally will not generate
     // TAILCALL args-reg
-    // TAILCALL,
+    TAILCALL,
     // TODO: implement
     CALLCONS,
     // TODO: implement

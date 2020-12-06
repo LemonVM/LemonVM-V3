@@ -9,43 +9,6 @@ pub mod function;
 pub mod io;
 pub mod opcode;
 pub mod variable;
+pub mod tags;
 
 mod test;
-
-// TODO: More premetive types
-#[repr(u8)]
-#[derive(Debug, Clone)]
-pub enum TypeTags {
-    // Primitives
-    Undefined = 0,
-    Null,
-    String,
-    Symbol,
-    Vector,
-    // Map
-    Map,
-    // primitive function
-    Function,
-    U8,
-    I8,
-    U16,
-    I16,
-    U32,
-    I32,
-    U64,
-    I64,
-    F32,
-    F64,
-    // use to make typed array
-    Opaque,
-    // With extension
-    #[cfg(BIG_INT)]
-    BigInt,
-    #[cfg(VALUE_TYPE_REFERENCE)]
-    REF,
-    // strong type extension
-    OBJStart,
-    KeyName,
-    ValueType,
-    OBJEnd,
-}
