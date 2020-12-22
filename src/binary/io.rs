@@ -1,13 +1,15 @@
 #[macro_use]
 use std::collections::BTreeMap;
 
+use std::io::Cursor;
+use byteorder::{BigEndian, ReadBytesExt};
+
 pub struct Reader {
-    data: *const u8,
-    pos: usize,
+    cursor: Cursor<Vec<u8>>,
 }
 
 pub struct Writer {
-    pub data: Vec<u8>,
+    data:Vec<u8>
 }
 
 pub trait BinaryRW {
@@ -56,111 +58,75 @@ pub fn mock_object<K: Ord, V>(kf: &dyn Fn() -> K, vf: &dyn Fn() -> V) -> BTreeMa
     ret
 }
 
+
 impl Reader {
-    pub fn new(data: *const u8) -> Reader {
-        Reader { data, pos: 0 }
+    pub fn new(data: Vec<u8>) -> Reader {
+        Reader { cursor:Cursor::new(data) }
     }
 
     pub fn read_u8(&mut self) -> u8 {
-        unsafe {
-            let b = *self.data.add(self.pos);
-            self.pos += 1;
-            b
-        }
+        self.cursor.read_u8::<BigEndian>().unwrap()
     }
     pub fn read_u16(&mut self) -> u16 {
-        unsafe {
-            let b = *(self.data.add(self.pos) as *const u16);
-            self.pos += 2;
-            b
-        }
+        self.cursor.read_u16::<BigEndian>().unwrap()
     }
     pub fn read_u32(&mut self) -> u32 {
-        unsafe {
-            let b = *(self.data.add(self.pos) as *const u32);
-            self.pos += 4;
-            b
-        }
+        self.cursor.read_u32::<BigEndian>().unwrap()
     }
     pub fn read_u64(&mut self) -> u64 {
-        unsafe {
-            let b = *(self.data.add(self.pos) as *const u64);
-            self.pos += 8;
-            b
-        }
+        self.cursor.read_u64::<BigEndian>().unwrap()
     }
 
     pub fn read_i8(&mut self) -> i8 {
-        unsafe {
-            let b = *self.data.add(self.pos);
-            self.pos += 1;
-            b as i8
-        }
+        self.cursor.read_i8::<BigEndian>().unwrap()
     }
     pub fn read_i16(&mut self) -> i16 {
-        unsafe {
-            let b = *(self.data.add(self.pos) as *const u16);
-            self.pos += 2;
-            b as i16
-        }
+        self.cursor.read_i16::<BigEndian>().unwrap()
     }
     pub fn read_i32(&mut self) -> i32 {
-        unsafe {
-            let b = *(self.data.add(self.pos) as *const u32);
-            self.pos += 4;
-            b as i32
-        }
+        self.cursor.read_i32::<BigEndian>().unwrap()
     }
     pub fn read_i64(&mut self) -> i64 {
-        unsafe {
-            let b = *(self.data.add(self.pos) as *const u64);
-            self.pos += 8;
-            b as i64
-        }
+        self.cursor.read_i64::<BigEndian>().unwrap()
     }
 
     pub fn read_f32(&mut self) -> f32 {
-        unsafe {
-            let i = *(self.data.add(self.pos) as *const u32);
-            self.pos += 4;
-            let bt = [i as u8, (i >> 8) as u8, (i >> 16) as u8, (i >> 24) as u8];
-            f32::from_be_bytes(bt)
-        }
+        self.cursor.read_f32::<BigEndian>().unwrap()
     }
     pub fn read_f64(&mut self) -> f64 {
-        unsafe {
-            let i = *(self.data.add(self.pos) as *const u64);
-            self.pos += 8;
-            let bt = [
-                i as u8,
-                (i >> 8) as u8,
-                (i >> 16) as u8,
-                (i >> 24) as u8,
-                (i >> 32) as u8,
-                (i >> 40) as u8,
-                (i >> 48) as u8,
-                (i >> 56) as u8,
-            ];
-            f64::from_be_bytes(bt)
-        }
+        self.cursor.read_f64::<BigEndian>().unwrap()    
     }
 
     pub fn read_string(&mut self) -> String {
-        let vec = self.read_vec(|reader| reader.read_u8());
+        let vec = self.read_vec(|reader,t| reader.read_u8());
         String::from_utf8(vec).unwrap()
     }
 
     pub fn read_vec<T, F>(&mut self, f: F) -> Vec<T>
     where
-        F: Fn(&mut Reader) -> T,
+        F: Fn(&mut Reader,u8) -> T,
     {
         let n = self.read_u16() as usize;
+        let t = self.read_u8();
         let mut vec = Vec::with_capacity(n);
         for _i in 0..n {
-            vec.push(f(self));
+            vec.push(f(self,t));
         }
         vec
     }
+
+    pub fn read_option<T, F>(&mut self, f: F) -> Option<T>
+    where
+        F: Fn(&mut Reader) -> T,
+    {
+        let flag = self.read_u8();
+        if flag == 0x00 {
+            None
+        } else {
+            Some(f(self))
+        }
+    }
+
     pub fn read_map<K, V, F>(&mut self, f: F) -> BTreeMap<K, V>
     where
         F: Fn(&mut Reader) -> (K, V),
@@ -174,62 +140,35 @@ impl Reader {
         }
         map
     }
-    pub fn read_option<T, F>(&mut self, f: F) -> Option<T>
-    where
-        F: Fn(&mut Reader) -> T,
-    {
-        let flag = self.read_u8();
-        if flag == 0x00 {
-            None
-        } else {
-            Some(f(self))
-        }
-    }
 }
 
 impl Writer {
     pub fn new() -> Self {
-        Writer { data: Vec::new() }
+        Writer { data: vec![] }
     }
 
     pub fn write_u8(&mut self, i: u8) {
-        self.data.push(i);
+        self.data.write_u8::<BigEndian>(i);
     }
 
     pub fn write_u16(&mut self, i: u16) {
-        self.data.append(&mut vec![i as u8, (i >> 8) as u8]);
+        self.data.write_u16::<BigEndian>(i);
     }
 
     pub fn write_u32(&mut self, i: u32) {
-        self.data.append(&mut vec![
-            i as u8,
-            (i >> 8) as u8,
-            (i >> 16) as u8,
-            (i >> 24) as u8,
-        ]);
+        self.data.write_u32::<BigEndian>(i);
     }
 
     pub fn write_u64(&mut self, i: u64) {
-        self.data.append(&mut vec![
-            i as u8,
-            (i >> 8) as u8,
-            (i >> 16) as u8,
-            (i >> 24) as u8,
-            (i >> 32) as u8,
-            (i >> 40) as u8,
-            (i >> 48) as u8,
-            (i >> 56) as u8,
-        ]);
+        self.data.write_u64::<BigEndian>(i);
     }
 
     pub fn write_f32(&mut self, i: f32) {
-        let d = i.to_be_bytes();
-        self.data.append(&mut d.into());
+        self.data.write_f32::<BigEndian>(i);
     }
 
     pub fn write_f64(&mut self, i: f64) {
-        let d = i.to_be_bytes();
-        self.data.append(&mut d.into());
+        self.data.write_f64::<BigEndian>(i);
     }
 
     pub fn write_string(&mut self, i: String) {

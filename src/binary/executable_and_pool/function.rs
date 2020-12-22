@@ -1,9 +1,3 @@
-/*
-    Function is just a thing storage
-    in constant pool, is not the function
-    actually runs in vm, that is called closure
-*/
-
 use super::constant::*;
 use super::{
     debug::*,
@@ -11,18 +5,6 @@ use super::{
 };
 use crate::gen_test_reader_writer_for_type;
 use std::collections::BTreeMap;
-
-#[repr(u8)]
-#[derive(Debug, Clone, PartialEq)]
-pub enum FunctionType {
-    Function = 0x00,
-    // currently disabled
-    Generator,
-    // currently disabled
-    AsyncFunction,
-    // currently disabled
-    AsyncGenerator,
-}
 
 impl BinaryRW for FunctionType {
     fn read(reader: &mut Reader) -> Self {
@@ -127,7 +109,6 @@ gen_test_reader_writer_for_type!(test_rw_mock_ExceptionTable, ExceptionTable);
 pub struct Function {
     //TODO: prob add an option name
     pub is_multi_return_function: bool,
-    pub function_type: FunctionType,
     // for example
     // args count is 3 f(a,b,c) will automatically use 4 register
     // the forth one is vargs
@@ -135,14 +116,13 @@ pub struct Function {
     pub max_registers: u16,
     pub code: Vec<u64>,
 
-    pub exception_table: Option<ExceptionTable>,
-    pub debug_info: Option<DebugInfo>,
+    // pub exception_table: Option<ExceptionTable>,
+    // pub debug_info: Option<DebugInfo>,
 }
 
 impl BinaryRW for Function {
     fn read(reader: &mut Reader) -> Self {
         let is_multi_return_function = reader.read_u8() != 0x00;
-        let function_type = FunctionType::read(reader);
         let args_count = reader.read_u8();
         let max_registers = reader.read_u16();
         let code = reader.read_vec(|reader| reader.read_u64());
@@ -150,7 +130,6 @@ impl BinaryRW for Function {
         let debug_info = reader.read_option(|reader| DebugInfo::read(reader));
         Function {
             is_multi_return_function,
-            function_type,
             args_count,
             max_registers,
             code,
@@ -164,7 +143,6 @@ impl BinaryRW for Function {
         } else {
             0x00
         });
-        FunctionType::write(&self.function_type, writer);
         writer.write_u8(self.args_count);
         writer.write_u16(self.max_registers);
         writer.write_vec(self.code.clone(), |writer, v| writer.write_u64(v));
@@ -186,7 +164,6 @@ impl BinaryRW for Function {
                 vecu64.push(random());
             }
             let is_multi_return_function = random();
-            let function_type = (&*FunctionType::mock_data()[0]).clone();
             let args_count = random();
             let max_registers = random();
             let code = vecu64;
@@ -198,7 +175,6 @@ impl BinaryRW for Function {
             };
             ret.push(Box::new(Function {
                 is_multi_return_function,
-                function_type,
                 args_count,
                 max_registers,
                 code,

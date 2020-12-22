@@ -16,9 +16,7 @@ pub union ConstantValue{
     i_64:i64,
     f_32:f32,
     f_64:f64,
-
-    ref_type: u16,
-    symbol: Vec<u8>,
+    
     string: Vec<u8>,
 }
 #[derive(Copy, PartialEq)]
@@ -35,14 +33,14 @@ impl BinaryRW for Constant {
 
             _ if U8Type as u8 == tag => Constant::U8(reader.read_u8()),
             _ if I8Type as u8 == tag => Constant::I8(reader.read_i8()),
-            _ if U16Type as u8 == tag => Constant::U16(reader.read_u16()),
-            _ if I16Type as u8 == tag => Constant::I16(reader.read_i16()),
-            _ if U32Type as u8 == tag => Constant::U32(reader.read_u32()),
-            _ if I32Type as u8 == tag => Constant::I32(reader.read_i32()),
-            _ if U64Type as u8 == tag => Constant::U64(reader.read_u64()),
-            _ if I64Type as u8 == tag => Constant::I64(reader.read_i64()),
-            _ if F32Type as u8 == tag => Constant::F32(reader.read_f32()),
-            _ if F64Type as u8 == tag => Constant::F64(reader.read_f64()),
+            _ if U16_Type as u8 == tag => Constant::U16(reader.read_u16()),
+            _ if I16_Type as u8 == tag => Constant::I16(reader.read_i16()),
+            _ if U32_Type as u8 == tag => Constant::U32(reader.read_u32()),
+            _ if I32_Type as u8 == tag => Constant::I32(reader.read_i32()),
+            _ if U64_Type as u8 == tag => Constant::U64(reader.read_u64()),
+            _ if I64_Type as u8 == tag => Constant::I64(reader.read_i64()),
+            _ if F32_Type as u8 == tag => Constant::F32(reader.read_f32()),
+            _ if F64_Type as u8 == tag => Constant::F64(reader.read_f64()),
 
             _ if TypeTags::Function as u8 == tag => Constant::Function(Function::read(reader)),
             _ => unimplemented!(),

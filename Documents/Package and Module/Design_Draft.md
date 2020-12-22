@@ -16,25 +16,24 @@ Module大概相当于类型，和这个类型的伴生方法，同时这个类�
 因为Module的构造是在LemonVM的加载时期动态完成的，所以也就不存在HKT的问题。
 
 ### Module的类型信息
-Module在加载之前的字节码状态的时候暂时还没想好如何处理类型信息 `TODO`
-原因是我想引入VM自带的Structural Type的同时还想处理Alias问题
-但是简单来讲就只是最最基础的类似String或者HashMap之类的字面类型，
-当Module在正式加载之后才开始去填充他的实际的类型信息，
-同时指引字面类型到某个虚拟机里面的实际类型，这也使得动态加载变得可行。
-
-同时`TODO`我还没有想好动态加载进来的新的Module
-对于已经存在的旧的带有Parameter的Module之间的关系，不过我暂时认为
-
-`List<Int>`和`List<Float>`之间不应该存在什么关系（
-至少想要他们发生关系的话需要先lift到`Any`类型
-
-所以每一个有parameter构造的module在新的实例加载并使用的时候才会构造新的类型。
+为了满足迅速的加载, 迅速的运行,我决定采用最简单的Nominal Type去限定Module的类型
+每个Module都会被标记上TypeInfo,这些TypeInfo可以是泛型的 [详见TypeInfo](../VM%20Default%20Types/Type.md),
+默认在打包的过程中,会生成动态调用的代码和静态调用的代码,
+分别使用invokevirtual之类的和invokedynamic之类的,如果TypeInfo里面还有Hole
+那么该Module的所有涉及到泛型参数的调用将会是invokedynamic
 
 ## LemonVM Package
 Package相当与库或者是可执行文件，Package会有一个配置文件
 在这个配置文件里需要描述依赖关系
 
 Package和Module的关系是Module \in Package，通过指定那个Module中那个函数作为main来运行。
+
+### Package和Module的区别
+
+- 所有的Package都需要在内部处理依赖问题,不可以向外部传递依赖关系
+- Package需要解决的是一个大的问题,比如一个框架,而Module解决的是一个小的问题
+- Package可以依赖于Package和Module,Module尽可以依赖于Module
+- 建议如果对一个大型框架添加功能请重新打包,而不是使用动态装载器
 
 ### 依赖关系的处理
 老生畅谈的问题，比如循环依赖怎么解决
